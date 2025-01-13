@@ -1,0 +1,16 @@
+(require :json-decode "package://roseus_mongo/euslisp/json/json-decode.l")
+
+(setq parsed (json::parse-from-string "{\"10\": \"10\"}"))
+(print (assoc :10 parsed))
+(setq parsed (json::parse-from-string "{\"10\": \"100\"}"))
+(print (assoc :10 parsed))
+(setq parsed (json::parse-from-string "{\"10\": \"hoge\"}"))
+(print (assoc :10 parsed))
+(setq parsed (json::parse-from-string "{\"foo\": \"hoge\"}"))
+(print (assoc :foo parsed))
+(setq parsed (json::parse-from-string "{\"1\": \"[1, 2, 3, 4]\"}"))
+(print (assoc :1 parsed))
+(print (cdr (assoc :1 (json::parse-from-string "{\"1\": \[1, 2, 3, 4\]}"))))
+
+(setq angle-vector (cdr (assoc :1 (json::parse-from-string "{\"1\": \[1, 2, 3, 4\]}"))))
+(print (coerce angle-vector float-vector))

@@ -1,0 +1,184 @@
+#!/usr/bin/env roseus
+;; ROSパッケージをロード
+(ros::load-ros-manifest "std_msgs")
+
+;; ノードの初期化
+(ros::roseus "audio_subscriber")
+
+;; 最新のトピックデータを格納するための変数を定義
+(defparameter *current-position* nil)
+
+;; std_msgs/Float64メッセージ型を利用してトピックをサブスクライブ
+(ros::subscribe "/audio/current_position" std_msgs::float64
+  #'(lambda (msg)
+      (setf *current-position* (send msg :data))))
+;; 無限ループでROSのスピンを維持（20Hzでログ表示）
+
+(setq *use-robot* t)
+
+(when *use-robot*
+  (load "package://jedy_bringup/euslisp/jedy-interface.l")
+  (jedy-init)
+
+  ;;(send *ri* :send-stretch :names '("rarm_joint0" "rarm_joint1" "larm_joint0" "larm_joint1") :value 64)
+  (send *ri* :send-stretch
+	:names '("rarm_joint0" "rarm_joint1" "rarm_joint2" "rarm_joint3"
+		 "rarm_joint4" "rarm_joint5" "rarm_joint6" "rarm_gripper_joint"
+		 "larm_joint0" "larm_joint1" "larm_joint2" "larm_joint3"
+		 "larm_joint4" "larm_joint5" "larm_joint6" "larm_gripper_joint"
+		 "head_joint0" "head_joint1" "front_right_wheel_joint"
+		 "front_left_wheel_joint" "rear_right_wheel_joint"
+		 "rear_left_wheel_joint")
+	:value '(64 64 64 64 127 127 127 127 127 127 127 127 127 127 127 127))
+
+  (send (send *ri* :read-stretch) :slots)
+
+  (send *ri* :servo-on)
+  )
+
+;; ビートタイミングとポーズを定義するリスト
+(setq beat-times '(0.035 0.673 1.347 1.997 2.670 3.320 3.982 4.644 5.306 5.991 6.629 7.268 7.941 8.615 9.276 9.927 10.588 11.238 11.900 12.562 13.224 13.886 14.536 15.197 15.859 16.521 17.171 17.833 18.495 19.156 19.818 20.480 21.130 21.792 22.454 23.115 23.766 24.427 25.089 25.751 26.401 27.063 27.725 28.386 29.048 29.710 30.372 31.022 31.684 32.369 32.996 33.669 34.319 34.981 35.619 36.293 36.966 37.628 38.278 38.951 39.590 40.263 40.914 41.564 42.237 42.887 43.549 44.211 44.861 45.523 46.184 46.846 47.508 48.170 48.820 49.482 50.143 50.805 51.455 52.117 52.779 53.441 54.102 54.764 55.414 56.076 56.738)
+)
+
+;; ビート時刻とポーズのペアを格納する辞書型リスト
+(setq beat-pose-dictionary '())
+
+;; ランダムに関節角度を決定する関数
+(defun random-pose ()
+(mapcar #'(lambda (val) (random 10)) (make-list (length (send *jedy* :angle-vector))))
+)
+;; (defun random-pose ()
+;;   (loop for i from 0 below (length (send *jedy* :angle-vector))
+;;         collect (random 10))) ;; 適切な長さを生成
+
+; (defvar *pose-counter* 0)  ;; 交互にするためのカウンタを定義
+
+(defun alternating-pose (counter)
+  "Return an alternating pose based on the current index (counter mod 4)."
+  (let ((pose-1 '(89.91 -3.84749 -29.9362 -99.765 -2.93624 0.0 0.0 0.0 
+                     99.8325 4.42126 29.835 -115.594 -87.615 0.0 0.0 0.0 
+                     -1.005828e-05 -0.13501))
+        (pose-2 '(-98.7525 -4.18499 -29.5987 -101.014 -2.59874 0.0 0.0 0.0 
+                    -7.615 4.11751 29.835 -100.609 -87.9187 0.0 0.0 0.0 
+                    -0.30376 -0.13501))
+        (pose-3 '(-80.19 -93.6225 -0.13499 0.13501 0.30376 0.0 0.0 0.0 -15.39 63.8888 -68.3775 -107.123 0.13501 0.0 0.0 0.0 -58.4213 -0.13501))
+        (pose-4 '(-80.19 -93.6225 -0.13499 -132.57 0.64126 0.0 0.0 0.0 -15.39 64.2263 -68.3775 -107.123 0.13501 0.0 0.0 0.0 -7.32376 -0.13501)
+))
+    (case (mod counter 4)
+      (0 pose-1)
+      (1 pose-2)
+      (2 pose-3)
+      (3 pose-4))))
+
+
+
+
+;; ビート時刻とポーズをランダムに割り当ててディクショナリに保存
+; (dolist (beat-time beat-times)
+;   (let ((random-pose (alternating-pose)))
+;     (push (cons beat-time random-pose) beat-pose-dictionary)))
+(setq *counter-pose* 0)
+(dolist (beat-time beat-times)
+    (setf *counter-pose* (+ 1 *counter-pose*))
+  (let ((random-pose (alternating-pose *counter-pose*)))
+    (push (cons beat-time random-pose) beat-pose-dictionary)))
+
+(setq beat-pose-dictionary (sort beat-pose-dictionary `(lambda (a b) (> (car a) (car b)))))
+(ros::ros-info "~A" beat-pose-dictionary)
+
+;; 現在処理したビートのインデックスを保持
+(setq current-index 0)
+
+(defun get-time-difference (elapsed-sec beat-list current-index)
+  (let* ((current-beat (nth current-index beat-list))   ;; 現在のビート
+         (current-time (car current-beat))               ;; 現在のビートの時刻
+         (tolerance 0.05))                               ;; 許容誤差（例: 50ms）
+    (if (or (<= (abs (- elapsed-sec current-time)) tolerance)  ;; 最初のビートは「近い」時刻差もOK
+            (= current-index 0))                         ;; 最初のビートを強制的に処理
+        (let ((next-index (1+ current-index)))           ;; 次のインデックス
+          (if (< next-index (length beat-list))          ;; 次のインデックスが有効か確認
+              (let* ((next-beat (nth next-index beat-list)) ;; 次のビート
+                     (next-time (car next-beat))           ;; 次のビート時刻
+                     (next-pose (cdr next-beat)))          ;; 次のビートのポーズ
+                ;; 時間差を計算して結果を返す
+                (list (- next-time elapsed-sec) next-time next-pose next-index))
+              nil))                                       ;; 次のビートがない場合は nil を返す
+        nil)))    
+
+;; 初期時刻を取得
+(setq start-time (ros::time-now))
+
+;; 実行部分、進行状況をインデックスで管理
+(ros::rate 20)
+(do-until-key
+  (let* ((current-time 0)
+         (elapsed-sec 0))
+    (setf current-time (ros::time-now))
+    (setf elapsed-sec (- (send current-time :to-sec)
+                         (send start-time :to-sec)))
+    (if *current-position*
+      (format t "Current position: ~A seconds~%" *current-position*))
+      (ros::spin-once)  ;; コールバックを処理
+
+    ;; 次のビートの情報を取得
+    (setq time-difference-with-pose (get-time-difference elapsed-sec (reverse beat-pose-dictionary) current-index))
+    (if time-difference-with-pose
+        (let ((time-diff (nth 0 time-difference-with-pose))
+              (next-beat (nth 1 time-difference-with-pose))
+             (pose (remove-if #'null (nth 2 time-difference-with-pose)));; なぜか含まれるnilを取り除く
+
+              (new-index (nth 3 time-difference-with-pose)))  ;; 新しいインデックス
+
+          (ros::ros-info "Elapsed Time: ~A seconds" elapsed-sec)
+          (ros::ros-info "after-calc-time-diff: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+          (ros::ros-info "if is OK!!")
+          ;; 次のビートの情報とポーズを送信
+          (ros::ros-info "Next Beat at ~A seconds: Pose ~A" next-beat pose)
+          (when *use-robot* (send *jedy* :angle-vector pose))
+
+          ;; 次のビートを送信した後にインデックスを更新
+          (setq current-index new-index)
+          (ros::ros-info "Sending angle vector with time diff: ~A" time-diff)
+
+          ;; 時刻差に応じて補間(* 1000 time-diff)、wait-interpolation
+	  (when *use-robot*
+	    (ros::ros-info "before-move: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+	    (send *ri* :angle-vector (send *jedy* :angle-vector) (* 900 time-diff) :default-controller 0 :min-time 0.1)
+	    ;; (ros::ros-info "after-move: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+	    (send *ri* :wait-interpolation)
+	    ;; (ros::ros-info "after-wait: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+	    )
+ 
+  ;; 終了待機状態
+  (ros::ros-info "Waiting for key press..."))
+  (progn
+    (ros::ros-info "if is not OK!!")
+    (ros::ros-info "time-now :~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+  )
+    )
+    (ros::sleep)
+    ))
+
+
+; #!/usr/bin/env roseus
+; ;; ROSパッケージをロード
+; (ros::load-ros-manifest "std_msgs")
+
+; ;; ノードの初期化
+; (ros::roseus "audio_subscriber")
+
+; ;; 最新のトピックデータを格納するための変数を定義
+; (defparameter *current-position* nil)
+
+; ;; std_msgs/Float64メッセージ型を利用してトピックをサブスクライブ
+; (ros::subscribe "/audio/current_position" std_msgs::float64
+;   #'(lambda (msg)
+;       (setf *current-position* (send msg :data))))
+; ;; 無限ループでROSのスピンを維持（20Hzでログ表示）
+; (loop
+;   (if *current-position*
+;       (format t "Current position: ~A seconds~%" *current-position*))
+;   (ros::spin-once)  ;; コールバックを処理
+;   (unix::usleep 50000))  ;; 20 Hz (0.05秒待機)
+
+
