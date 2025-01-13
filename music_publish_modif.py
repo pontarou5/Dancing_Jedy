@@ -7,6 +7,20 @@ from pynput import keyboard
 import threading
 import sys
 
+# コマンドライン引数でファイルを選択
+if len(sys.argv) > 1:
+    data_file = sys.argv[1]  # 引数で指定されたファイル名
+
+    if data_file == "ダンスホール":
+        import ダンスホール_data as data
+    elif data_file == "カメレオン":
+        import カメレオン_data as data
+    else:
+        raise ValueError(f"Unknown data file: {data_file}")
+
+    file_path = data.file_path
+
+
 # 音楽の進行状況を発信するためのROSノード
 def audio_player(file_path):
     if not os.path.exists(file_path):
@@ -109,8 +123,8 @@ def audio_player(file_path):
         listener.join()
 
 if __name__ == "__main__":
-    # file_path = "/home/mech-user/Downloads/もうええわ.m4a"
-    file_path = "/home/mech-user/Downloads/もうええわ_detected_tempo_based_using_drums.mp3"
-    # file_path = "/home/mech-user/Downloads/もうええわ_drums_detected_tempo_based_using_drums.mp3"
-    # file_path = "/home/mech-user/Downloads/RetroFuture-Clean.mp3"
+    # # file_path = "/home/mech-user/Downloads/もうええわ.m4a"
+    # file_path = "/home/mech-user/Downloads/もうええわ_detected_tempo_based_using_drums.mp3"
+    # # file_path = "/home/mech-user/Downloads/もうええわ_drums_detected_tempo_based_using_drums.mp3"
+    # # file_path = "/home/mech-user/Downloads/RetroFuture-Clean.mp3"
     audio_player(file_path)

@@ -1,14 +1,8 @@
 #!/usr/bin/env roseus
 
-(require :json-decode "package://roseus_mongo/euslisp/json/json-decode.l")
+(load "/tmp/data.l")
+(setq beat-times *beat-times*)
 
-(with-open-file (str "/tmp/dance_data.json" :direction :input)
-  (setq parsed (json::parse-from-string (read-line str))))
-
-(when parsed
-  (setq beat-times (cdr (assoc :wheel_beat_times parsed)))
-  (setq beat-times (cdr (assoc :wheel_moves parsed)))
-)
 
 ;; ROSパッケージをロード
 (ros::load-ros-manifest "std_msgs")
@@ -53,7 +47,7 @@
 
 
 ;; ビートタイミングとポーズを定義するリスト
-(setq beat-times '(24.207 24.938 25.670 26.401 27.133 27.864 28.595 29.327 30.058 30.790 31.509 32.253 32.972 33.704 34.435 35.167 35.886 36.618 37.349 38.104 38.824 39.555 40.287 41.030 41.761 42.493 43.212 43.955 44.687 45.418 46.150 46.869 47.624 48.367 49.087 49.818 50.550 51.270 52.013 52.744 53.476 54.207 54.938 55.681 56.401 57.121 57.841 58.584 59.292)
+; (setq beat-times '(24.207 24.938 25.670 26.401 27.133 27.864 28.595 29.327 30.058 30.790 31.509 32.253 32.972 33.704 34.435 35.167 35.886 36.618 37.349 38.104 38.824 39.555 40.287 41.030 41.761 42.493 43.212 43.955 44.687 45.418 46.150 46.869 47.624 48.367 49.087 49.818 50.550 51.270 52.013 52.744 53.476 54.207 54.938 55.681 56.401 57.121 57.841 58.584 59.292)
 )
 
 ;; wheel-move-beat-timesを初期化
@@ -77,22 +71,22 @@
 (defun alternating-wheel-move (counter)
   "Return an alternating pose based on the current index (counter mod 4)."
   (let (
-        (move-foward '(2 0 0))
-        (move-backward '(-2 0 0))
-        (rotate-right '(0 0 10))
-        (rotate-left '(0 0 -10))
+        (stand-still '(0 0 0))
+        (move-foward '(1 0 0))
+        (move-backward '(-1 0 0))
+        (rotate-right '(0 0 2))
+        (rotate-left '(0 0 -2))
         (move-right '(0 2 0))
         (move-left '(0 -2 0))
        )
-    (case (mod counter 4)
-      ; (0 move-foward)
-      ; (1 move-backward)
-      ; (2 rotate-right)
-      ; (3 rotate-left)
-      (0 move-right)
-      (1 move-left)
-      (2 move-right)
-      (3 move-left)
+    (case (mod counter 7)
+      (0 move-foward)
+      (1 stand-still)
+      (2 rotate-right)
+      (3 move-right)
+      (4 move-left)
+      (5 rotate-left)
+      (6 move-backward)
       )))
 
 ;beat-wheel-move-dictionaryをalternating-poseをもとに作成
