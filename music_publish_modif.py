@@ -34,9 +34,9 @@ def audio_player(file_path):
     player.play()
     print("Music playing started.")
 
-    # 音楽の全長（秒）を取得
-    duration = player.get_length() / 1000  # 音楽の全長（秒）
-    print(f"Duration: {duration:.2f} seconds")
+    # # 音楽の全長（秒）を取得
+    # duration = player.get_length() / 1000  # 音楽の全長（秒）
+    # print(f"Duration: {duration:.2f} seconds")
 
     # ROSノードの初期化
     rospy.init_node('audio_player', anonymous=True)

@@ -84,9 +84,9 @@
       (1 stand-still)
       (2 rotate-right)
       (3 move-right)
-      (4 move-left)
+      (6 move-left)
       (5 rotate-left)
-      (6 move-backward)
+      (4 move-backward)
       )))
 
 ;beat-wheel-move-dictionaryをalternating-poseをもとに作成
