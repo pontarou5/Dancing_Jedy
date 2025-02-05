@@ -7,6 +7,20 @@ from pynput import keyboard
 import threading
 import sys
 
+# コマンドライン引数でファイルを選択
+if len(sys.argv) > 1:
+    data_file = sys.argv[1]  # 引数で指定されたファイル名
+
+    if data_file == "ダンスホール":
+        import ダンスホール_data as data
+    elif data_file == "カメレオン":
+        import カメレオン_data as data
+    else:
+        raise ValueError(f"Unknown data file: {data_file}")
+
+    file_path = data.file_path
+
+
 # 音楽の進行状況を発信するためのROSノード
 def audio_player(file_path):
     if not os.path.exists(file_path):
@@ -20,14 +34,13 @@ def audio_player(file_path):
     player.play()
     print("Music playing started.")
 
-    # 音楽の全長（秒）を取得
-    duration = player.get_length() / 1000  # 音楽の全長（秒）
-    print(f"Duration: {duration:.2f} seconds")
+    # # 音楽の全長（秒）を取得
+    # duration = player.get_length() / 1000  # 音楽の全長（秒）
+    # print(f"Duration: {duration:.2f} seconds")
 
     # ROSノードの初期化
     rospy.init_node('audio_player', anonymous=True)
     pub = rospy.Publisher('/audio/current_position', Float64, queue_size=1)
-    pub = rospy.Publisher('/audio/current_position', Float64, queue_size=10)
 
     # 一時停止・再開のフラグ
     paused = False
@@ -35,12 +48,26 @@ def audio_player(file_path):
 
     # 音楽の進行状況を発信するスレッド
     def log_current_position():
-        while running:
+        rate = rospy.Rate(30)
+
+        # last_posとcounterの初期化
+        if not hasattr(log_current_position, "last_pos"): log_current_position.last_pos = 0
+        if not hasattr(log_current_position, "counter"):  log_current_position.counter = 0
+
+        while running and not rospy.is_shutdown():
             if player.is_playing() and not paused:  # 再生中の場合のみ進行状況を更新
-                current_pos = player.get_time() / 1000  # ミリ秒を秒に変換
-                rospy.loginfo(f"Current position: {current_pos:.2f} seconds")
+                current_pos_raw = player.get_time() / 1000.0  # ミリ秒を秒に変換
+
+                # current_posが前回と同じ値なら適当に補間する
+                if log_current_position.last_pos == current_pos_raw:
+                    log_current_position.counter += 1
+                else: log_current_position.counter = 0
+                log_current_position.last_pos = current_pos_raw
+                current_pos = current_pos_raw + log_current_position.counter/30.0 # 30 Hz by rospy.Rate(30)
+
+                rospy.loginfo(f"Current position: {current_pos:.5f} seconds counter {log_current_position.counter}")
                 pub.publish(current_pos)  # 現在の進行位置をトピックで発信
-            time.sleep(0.0005)
+            rate.sleep()
 
     # 音楽再生の位置を1秒ごとに表示するスレッドを開始
     log_thread = threading.Thread(target=log_current_position, daemon=True)
@@ -96,5 +123,8 @@ def audio_player(file_path):
         listener.join()
 
 if __name__ == "__main__":
-    file_path = "/home/mech-user/Downloads/RetroFuture-Clean.mp3"
+    # # file_path = "/home/mech-user/Downloads/もうええわ.m4a"
+    # file_path = "/home/mech-user/Downloads/もうええわ_detected_tempo_based_using_drums.mp3"
+    # # file_path = "/home/mech-user/Downloads/もうええわ_drums_detected_tempo_based_using_drums.mp3"
+    # # file_path = "/home/mech-user/Downloads/RetroFuture-Clean.mp3"
     audio_player(file_path)

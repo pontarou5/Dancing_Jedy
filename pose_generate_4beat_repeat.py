@@ -18,6 +18,7 @@ if len(sys.argv) > 1:
     brightness = data.brightness
     smoothness = data.smoothness
     brightness = data.brightness
+    print(raw_beat_times)
     print(brightness)
 
 
@@ -298,10 +299,12 @@ lisp_file_path = "/tmp/data.l"
 # ファイルが既に存在する場合は内容をクリア
 if os.path.exists(lisp_file_path):
     os.remove(lisp_file_path)
+    print("clear done")
 
 # 新しい内容でファイルを書き込み
 with open(lisp_file_path, 'w') as f:
     f.write("(defparameter *beat-times* '(")
+    print(beat_times)
     f.write(" ".join(map(str, beat_times)))
     f.write("))\n\n")
 
