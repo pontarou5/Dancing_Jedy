@@ -96,5 +96,5 @@ def audio_player(file_path):
         listener.join()
 
 if __name__ == "__main__":
-    file_path = "/home/mech-user/Downloads/RetroFuture-Clean.mp3"
+    file_path = "/home/m-aoki/Downloads/RetroFuture-Clean.mp3"
     audio_player(file_path)

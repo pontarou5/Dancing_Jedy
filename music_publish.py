@@ -123,8 +123,8 @@ def audio_player(file_path):
         listener.join()
 
 if __name__ == "__main__":
-    # # file_path = "/home/mech-user/Downloads/もうええわ.m4a"
-    # file_path = "/home/mech-user/Downloads/もうええわ_detected_tempo_based_using_drums.mp3"
-    # # file_path = "/home/mech-user/Downloads/もうええわ_drums_detected_tempo_based_using_drums.mp3"
-    # # file_path = "/home/mech-user/Downloads/RetroFuture-Clean.mp3"
+    # # file_path = "/home/m-aoki/Downloads/もうええわ.m4a"
+    # file_path = "/home/m-aoki/Downloads/もうええわ_detected_tempo_based_using_drums.mp3"
+    # # file_path = "/home/m-aoki/Downloads/もうええわ_drums_detected_tempo_based_using_drums.mp3"
+    # # file_path = "/home/m-aoki/Downloads/RetroFuture-Clean.mp3"
     audio_player(file_path)
