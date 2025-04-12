@@ -31,6 +31,24 @@ def run_local_script4():
     # 新しいターミナルを立ち上げてROSコマンドを実行
     subprocess.Popen(["gnome-terminal", "--", "bash", "-c", "source ~/ros/enshu_ws/devel/setup.bash; roslaunch jedy_bringup minimal.launch; exec bash"])
 
+def shutdown_ros():
+    print("ROSを終了")
+    # ROS関連プロセスを全てkill（roscore, roslaunch など）
+    subprocess.Popen(["pkill", "-9", "-f", "ros"])
+    # 必要に応じてノード名やlaunchファイル名でも個別kill可能
+
+def setup_chameleon_scripts():
+    print("Lispスクリプト2本を起動（カメレオン）")
+    subprocess.Popen(["gnome-terminal", "--", "bash", "-c", "roseus jedy_dance_subscribe_カメレオン.l; exec bash"])
+    subprocess.Popen(["gnome-terminal", "--", "bash", "-c", "roseus wheel_move_dance_カメレオン.l; exec bash"])
+
+def stop_chameleon_all():
+    print("カメレオン関連のすべてのプロセスを停止")
+    subprocess.run(["pkill", "-f", "jedy_dance_subscribe_カメレオン.l"])
+    subprocess.run(["pkill", "-f", "wheel_move_dance_カメレオン.l"])
+    subprocess.run(["pkill", "-f", "music_publish.py"])
+
+
 # --- ボタン設定 ---
 # 黒背景・白文字・目立たない感じ
 button_style = {
@@ -42,15 +60,25 @@ button_style = {
     "highlightthickness": 0
 }
 
-btn1 = tk.Button(root, text="Play カメレオン", command=run_local_script1, **button_style)
+btn1 = tk.Button(root, text="再生：カメレオン", command=run_local_script1, **button_style)
 btn1.place(x=600, y=100, width=300, height=150)
 
-btn2 = tk.Button(root, text="Play ダンスホール", command=run_local_script2, **button_style)
+btn2 = tk.Button(root, text="再生：ダンスホール", command=run_local_script2, **button_style)
 btn2.place(x=600, y=300, width=300, height=150)
 
-btn3 = tk.Button(root, text="Stop Playing All", command=run_local_script3, **button_style)
+btn3 = tk.Button(root, text="音楽をすべて停止", command=run_local_script3, **button_style)
 btn3.place(x=600, y=500, width=300, height=150)
 
-btn4 = tk.Button(root, text="Set up master", command=run_local_script4, **button_style)
+btn4 = tk.Button(root, text="ROSを起動", command=run_local_script4, **button_style)
 btn4.place(x=600, y=700, width=300, height=150)
+
+btn5 = tk.Button(root, text="ROSを終了", command=shutdown_ros, **button_style)
+btn5.place(x=600, y=900, width=300, height=150)
+
+btn_setup = tk.Button(root, text="カメレオン準備", command=setup_chameleon_scripts, **button_style)
+btn_setup.place(x=100, y=1100, width=300, height=100)
+
+btn_stop = tk.Button(root, text="カメレオン停止", command=stop_chameleon_all, **button_style)
+btn_stop.place(x=900, y=1100, width=300, height=100)
+
 root.mainloop()
