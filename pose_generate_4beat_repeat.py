@@ -11,8 +11,21 @@ if len(sys.argv) > 1:
         import ダンスホール_data as data
     elif data_file == "カメレオン":
         import カメレオン_data as data
+    elif data_file == "firework":
+        import firework_data as data
+    elif data_file == "permission_to_dance":
+        import permission_to_dance_data as data
+    elif data_file == "もうええわ":
+        import もうええわ_data as data
+    elif data_file == "ライラック":
+        import ライラック_data as data
+    elif data_file == "愛をこめて花束を":
+        import 愛をこめて花束を_data as data
+    elif data_file == "紅蓮華":
+        import 紅蓮華_data as data
     else:
         raise ValueError(f"Unknown data file: {data_file}")
+
 
     raw_beat_times = data.beat_times
     brightness = data.brightness
@@ -304,7 +317,6 @@ if os.path.exists(lisp_file_path):
 # 新しい内容でファイルを書き込み
 with open(lisp_file_path, 'w') as f:
     f.write("(defparameter *beat-times* '(")
-    print(beat_times)
     f.write(" ".join(map(str, beat_times)))
     f.write("))\n\n")
 
@@ -312,7 +324,6 @@ with open(lisp_file_path, 'w') as f:
     for beat_and_pose in beat_pose_dictionary:
         f.write(f"  ({' '.join(map(str, beat_and_pose))})\n")        
     f.write("))\n")
-
     f.write("(defparameter *smoothness* ")
     f.write(str(smoothness))
     f.write(")\n\n")

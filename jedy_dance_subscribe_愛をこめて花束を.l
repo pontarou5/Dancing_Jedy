@@ -1,0 +1,229 @@
+#!/usr/bin/env roseus
+
+(setq beat-pose-dictionary '(
+  (14.617 -79.5487 5.09626 -1.48499 -115.087 0.0 0.0 0.0 0.0 92.9812 79.0425 -2.09251 -4.11749 0.0 0.0 0.0 0.0 0.0 0.0)
+  (15.36 -92.9812 -75.87 2.39626 -50.8275 0.0 0.0 0.0 0.0 -52.6163 40.9387 75.8025 29.8013 0.0 0.0 0.0 0.0 24.9075 0.0)
+  (16.091 -92.9812 -78.7387 2.39626 86.4338 0.0 0.0 0.0 0.0 92.9812 78.7387 -2.39626 86.4338 0.0 0.0 0.0 0.0 0.0 0.0)
+  (16.823 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 86.9062 15.795 -49.68 -94.1625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (17.578 -79.5487 5.09626 -1.48499 -115.087 0.0 0.0 0.0 0.0 92.9812 79.0425 -2.09251 -4.11749 0.0 0.0 0.0 0.0 0.0 0.0)
+  (18.321 -92.9812 -75.87 2.39626 -50.8275 0.0 0.0 0.0 0.0 -52.6163 40.9387 75.8025 29.8013 0.0 0.0 0.0 0.0 24.9075 0.0)
+  (19.075 -92.9812 -78.7387 2.39626 86.4338 0.0 0.0 0.0 0.0 92.9812 78.7387 -2.39626 86.4338 0.0 0.0 0.0 0.0 0.0 0.0)
+  (19.807 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 86.9062 15.795 -49.68 -94.1625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (20.55 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 92.9812 78.7387 -2.39626 86.4338 0.0 0.0 0.0 0.0 -79.3463 0.0)
+  (21.281 -95.2087 -5.12999 0.13501 -42.8625 0.0 0.0 0.0 0.0 67.7025 2.90249 -0.13501 -24.3337 0.0 0.0 0.0 0.0 -79.3463 0.0)
+  (22.013 -53.73 5.09626 -76.4437 21.2288 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 0.0 0.0)
+  (22.756 -92.9812 -78.7387 2.39626 86.4338 0.0 0.0 0.0 0.0 92.6437 56.0925 75.8025 48.2625 0.0 0.0 0.0 0.0 24.9075 0.0)
+  (23.51 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 92.9812 78.7387 -2.39626 86.4338 0.0 0.0 0.0 0.0 -79.3463 0.0)
+  (24.242 -95.2087 -5.12999 0.13501 -42.8625 0.0 0.0 0.0 0.0 67.7025 2.90249 -0.13501 -24.3337 0.0 0.0 0.0 0.0 -79.3463 0.0)
+  (24.973 -53.73 5.09626 -76.4437 21.2288 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 0.0 0.0)
+  (25.728 -92.9812 -78.7387 2.39626 86.4338 0.0 0.0 0.0 0.0 92.6437 56.0925 75.8025 48.2625 0.0 0.0 0.0 0.0 24.9075 0.0)
+  (26.471 -92.9812 -79.0425 2.09251 -4.11749 0.0 0.0 0.0 0.0 126.596 5.46749 0.13499 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (27.214 -37.395 -16.0987 54.2025 -93.8587 0.0 0.0 0.0 0.0 80.19 93.9262 1.48499 -115.087 0.0 0.0 0.0 0.0 0.0 0.0)
+  (27.945 -37.395 -16.0987 54.2025 -93.8587 0.0 0.0 0.0 0.0 86.9062 15.795 -49.68 -94.1625 0.0 0.0 0.0 0.0 -24.9075 -16.0625)
+  (28.688 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 0.0 0.0)
+  (29.431 -92.9812 -79.0425 2.09251 -4.11749 0.0 0.0 0.0 0.0 126.596 5.46749 0.13499 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (30.174 -37.395 -16.0987 54.2025 -93.8587 0.0 0.0 0.0 0.0 80.19 93.9262 1.48499 -115.087 0.0 0.0 0.0 0.0 0.0 0.0)
+  (30.929 -37.395 -16.0987 54.2025 -93.8587 0.0 0.0 0.0 0.0 86.9062 15.795 -49.68 -94.1625 0.0 0.0 0.0 0.0 -24.9075 -16.0625)
+  (31.66 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 0.0 0.0)
+  (32.403 -92.9812 -79.0425 2.09251 -4.11749 0.0 0.0 0.0 0.0 67.7025 2.90249 -0.13501 -24.3337 0.0 0.0 0.0 0.0 0.0 0.0)
+  (33.135 -95.2087 -5.12999 0.13501 -42.8625 0.0 0.0 0.0 0.0 95.2087 5.12999 -0.13501 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (33.878 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 126.596 5.46749 0.13499 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (34.621 -67.7025 -2.90249 0.13501 -24.3337 0.0 0.0 0.0 0.0 67.7025 2.90249 -0.13501 -24.3337 0.0 0.0 0.0 0.0 0.0 16.0625)
+  (35.352 -92.9812 -79.0425 2.09251 -4.11749 0.0 0.0 0.0 0.0 67.7025 2.90249 -0.13501 -24.3337 0.0 0.0 0.0 0.0 0.0 0.0)
+  (36.107 -95.2087 -5.12999 0.13501 -42.8625 0.0 0.0 0.0 0.0 95.2087 5.12999 -0.13501 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (36.838 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 126.596 5.46749 0.13499 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (37.593 -67.7025 -2.90249 0.13501 -24.3337 0.0 0.0 0.0 0.0 67.7025 2.90249 -0.13501 -24.3337 0.0 0.0 0.0 0.0 0.0 16.0625)
+  (38.325 -95.2087 -5.12999 0.13501 -42.8625 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 44.685 0.0)
+  (39.068 52.6163 -40.9387 -75.8025 29.8013 0.0 0.0 0.0 0.0 92.9812 79.0425 -2.09251 -4.11749 0.0 0.0 0.0 0.0 0.0 0.0)
+  (39.962 -126.596 -5.46749 -0.13499 -42.8625 0.0 0.0 0.0 0.0 50.4562 -10.2263 76.1062 19.9125 0.0 0.0 0.0 0.0 0.0 0.0)
+  (40.542 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 50.4562 -10.2263 76.1062 19.9125 0.0 0.0 0.0 0.0 0.0 0.0)
+  (41.285 -95.2087 -5.12999 0.13501 -42.8625 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 44.685 0.0)
+  (42.017 52.6163 -40.9387 -75.8025 29.8013 0.0 0.0 0.0 0.0 92.9812 79.0425 -2.09251 -4.11749 0.0 0.0 0.0 0.0 0.0 0.0)
+  (42.771 -126.596 -5.46749 -0.13499 -42.8625 0.0 0.0 0.0 0.0 50.4562 -10.2263 76.1062 19.9125 0.0 0.0 0.0 0.0 0.0 0.0)
+  (43.503 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 50.4562 -10.2263 76.1062 19.9125 0.0 0.0 0.0 0.0 0.0 0.0)
+  (44.246 -37.395 -16.0987 54.2025 -93.8587 0.0 0.0 0.0 0.0 92.6437 56.0925 75.8025 48.2625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (44.989 -67.7025 -2.90249 0.13501 -24.3337 0.0 0.0 0.0 0.0 126.596 5.46749 0.13499 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (45.732 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 92.9812 78.7387 -2.39626 86.4338 0.0 0.0 0.0 0.0 0.0 0.0)
+  (46.463 -79.5487 5.09626 -1.48499 -115.087 0.0 0.0 0.0 0.0 23.0175 76.5112 70.74 123.356 0.0 0.0 0.0 0.0 0.0 0.0)
+  (47.206 -37.395 -16.0987 54.2025 -93.8587 0.0 0.0 0.0 0.0 92.6437 56.0925 75.8025 48.2625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (47.949 -67.7025 -2.90249 0.13501 -24.3337 0.0 0.0 0.0 0.0 126.596 5.46749 0.13499 -42.8625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (48.692 -92.6437 -56.0925 -75.8025 48.2625 0.0 0.0 0.0 0.0 92.9812 78.7387 -2.39626 86.4338 0.0 0.0 0.0 0.0 0.0 0.0)
+  (49.447 -79.5487 5.09626 -1.48499 -115.087 0.0 0.0 0.0 0.0 23.0175 76.5112 70.74 123.356 0.0 0.0 0.0 0.0 0.0 0.0)
+  (50.178 -79.5487 5.09626 -1.48499 -115.087 0.0 0.0 0.0 0.0 86.9062 15.795 -49.68 -94.1625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (50.921 -86.9062 -15.795 49.68 -94.1625 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 -79.3463 0.0)
+  (50.178 -79.5487 5.09626 -1.48499 -115.087 0.0 0.0 0.0 0.0 86.9062 15.795 -49.68 -94.1625 0.0 0.0 0.0 0.0 0.0 0.0)
+  (50.921 -86.9062 -15.795 49.68 -94.1625 0.0 0.0 0.0 0.0 37.395 16.0987 -54.2025 -93.8587 0.0 0.0 0.0 0.0 -79.3463 0.0)
+))
+
+
+(setq beat-times '(14.617 15.36 16.091 16.823 17.578 18.321 19.075 19.807 20.55 21.281 22.013 22.756 23.51 24.242 24.973 25.728 26.471 27.214 27.945 28.688 29.431 30.174 30.929 31.66 32.403 33.135 33.878 34.621 35.352 36.107 36.838 37.593 38.325 39.068 39.962 40.542 41.285 42.017 42.771 43.503 44.246 44.989 45.732 46.463 47.206 47.949 48.692 49.447 50.178 50.921 52.407 53.139 53.87 55.356))
+
+(setq smoothness 0.9)
+
+;; 結果を出力
+(print "Converted beat-times:")
+(print beat-times)
+(print "Converted beat-pose-dictionary:")
+(print beat-pose-dictionary)
+
+
+
+
+;; ROSパッケージをロード
+(ros::load-ros-manifest "std_msgs")
+
+;; ノードの初期化
+(ros::roseus "audio_subscriber")
+
+;; 最新のトピックデータを格納するための変数を定義
+(defparameter *current-position* 0)
+
+;; std_msgs/Float64メッセージ型を利用してトピックをサブスクライブ
+(ros::subscribe "/audio/current_position" std_msgs::float64
+  #'(lambda (msg)
+      (setf *current-position* (send msg :data))))
+
+;;実機とつなぐかどうか
+(setq *use-robot* t)
+; (setq *use-robot* nil)
+
+
+
+;;実機の初期設定
+(when *use-robot*
+  (load "package://jedy_bringup/euslisp/jedy-interface.l")
+  (jedy-init)
+
+  (send *ri* :send-stretch
+	:names '("rarm_joint0" "rarm_joint1" "rarm_joint2" "rarm_joint3"
+		 "rarm_joint4" "rarm_joint5" "rarm_joint6" "rarm_gripper_joint"
+		 "larm_joint0" "larm_joint1" "larm_joint2" "larm_joint3"
+		 "larm_joint4" "larm_joint5" "larm_joint6" "larm_gripper_joint"
+		 "head_joint0" "head_joint1" "front_right_wheel_joint"
+		 "front_left_wheel_joint" "rear_right_wheel_joint"
+		 "rear_left_wheel_joint")
+	:value '(64 64 64 64 127 127 127 127 127 127 127 127 127 127 127 127))
+
+  (send (send *ri* :read-stretch) :slots)
+
+  (send *ri* :servo-on)
+  )
+
+
+(ros::ros-info "~A" beat-pose-dictionary)
+
+
+(defun set-current-index (current-position beat-times)
+  ; (ros::ros-info "run function : set-current-index")
+  (let ((current-index 0))
+    (dolist (beat-time beat-times)
+      (unless (numberp beat-time)
+        (ros::ros-info "beat-time is ~A so it is invalid" beat-time)
+        (return-from set-current-index nil))
+      (when (> beat-time current-position)
+        ; (ros::ros-info "current-index: ~A | current-beat: ~A" current-index beat-time)
+        ; ;; 戻り値の型をログに明示
+        ; (ros::ros-info "Returning: ~A" (list current-index beat-time))
+        (return-from set-current-index (list current-index beat-time))
+      )
+      (incf current-index))
+    nil))
+
+(defun get-next-info (current-position beat-pose-dictionary current-index current-beat smoothness)
+  "Returns the information for the next beat if the current position is close to the current beat."
+  (let* ((current-beat-and-pose (nth current-index beat-pose-dictionary)) ;; 現在のビート情報
+         (tolerance 0.1)) ;; 許容誤差（例: 100ms）
+    
+    ; ; 変数の状態を出力
+    ; (format t "DEBUG: current-position=~A, current-beat=~A, current-index=~A~%"
+    ;         current-position current-beat current-index)
+    
+    ;; 近いビートがあるかどうかを確認
+    (if (or (<= (abs (- current-position current-beat)) tolerance) ;; 最初のビートも許容
+            (= current-index 0))                                 ;; 最初のビートを強制的に処理
+        (progn
+          (format t "DEBUG: Close enough or first beat - checking next beat~%")
+          ; (let ((next-index (1+ current-index))) ;; 次のインデックスを計算
+          (let ((next-index (+ 1 current-index))) ;; 次のインデックスを計算
+
+            ;; 次のインデックスが範囲内か確認
+            (if (< next-index (length beat-pose-dictionary))
+                (let* ((next-beat-and-pose (nth next-index beat-pose-dictionary)) ;; 次のビート情報
+                       (next-time (car next-beat-and-pose))                        ;; 次のビート時刻
+                       (next-pose (cdr next-beat-and-pose)))                       ;; 次のビートのポーズ
+                  ;; 結果を計算して返す
+                  (format t "DEBUG: Found next beat at index ~A: next-time=~A, next-pose=~A~%"
+                          next-index next-time next-pose)
+                  (list (* smoothness (- next-time current-position)) next-time next-pose next-index))
+                ;; 次のインデックスが範囲外の場合のログ
+                (progn
+                  ; (format t "DEBUG: Next index (~A) is out of range~%" next-index)
+                  (return-from get-next-info nil)))))
+
+      ;; 近いビートがない場合のログ
+      ; (format t "DEBUG: No beat is close enough: current-position=~A, current-beat=~A~%"
+      ;         current-position current-beat)
+      (return-from get-next-info nil))))
+
+                                         
+        
+;; 直後のビートのインデックスを保持
+(setq current-index 0)
+
+;; 実行部分、進行状況をインデックスで管理
+(ros::rate 30)
+
+(do-until-key
+
+  (ros::spin-once)  ;; コールバックを処理
+  (if *current-position*  ;;この条件が満たされた時のみ以下全体の処理を行う
+    (progn
+      ; (format t "*current-position*: ~A seconds~%" *current-position*)
+      ; (ros::ros-info "got valid current-position")    
+      (let* ((current-index-and-beat  (set-current-index *current-position* beat-times))
+            (current-index  (car current-index-and-beat))
+            (current-beat (first (cdr current-index-and-beat))))
+        ; (ros::ros-info "current-index: ~A" current-index)
+
+        ;;次のビートの情報を取得
+        (setq next-info-list (get-next-info *current-position* beat-pose-dictionary current-index current-beat smoothness))
+        (if next-info-list
+            (let ((time-diff (nth 0 next-info-list))
+                  (next-beat (nth 1 next-info-list))
+                  (pose (remove-if #'null (nth 2 next-info-list)));; なぜか含まれるnilを取り除く
+                  (next-index (nth 3 next-info-list)))  ;; 新しいインデックス
+
+              ; (ros::ros-info "*current-position*: ~A seconds" *current-position*)
+
+              ; 次のビートの情報とポーズを送信
+              (ros::ros-info "next-index: ~A | next-beat: ~A | seconds pose:~A " next-index next-beat pose)
+              (ros::ros-info "time-diff: ~A" time-diff)
+              (when *use-robot* (send *jedy* :angle-vector pose))
+
+              ;; 時刻差に応じて補間(* 1000 time-diff)、wait-interpolation
+              (when *use-robot*
+                ; (ros::ros-info "before-move: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+                (send *ri* :angle-vector (send *jedy* :angle-vector) time-diff :default-controller 0 :min-time 0.1)
+                ;; (ros::ros-info "after-move: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+                (send *ri* :wait-interpolation)
+                ;; (ros::ros-info "after-wait: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+              )
+    
+                ; 終了待機状態
+              (ros::ros-info "Waiting for key press...")
+            )
+            (progn
+              (ros::ros-info "get *current-position* sucssesfully but not found beat within 0.05 s")
+              (ros::ros-info "*current-position* :~A seconds" *current-position*)
+            )
+        )
+      )
+    )
+    (ros::ros-info "not found *current-position*")
+  )
+  (ros::sleep)
+)
+
+;; プログラムの終了を防ぐためにループを維持
+(ros::rate 10 (do-until-key
+                 (ros::spin-once)))
