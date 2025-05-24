@@ -15,6 +15,20 @@ if len(sys.argv) > 1:
         import ダンスホール_data as data
     elif data_file == "カメレオン":
         import カメレオン_data as data
+    elif data_file == "firework":
+        import firework_data as data
+    elif data_file == "permission_to_dance":
+        import permission_to_dance_data as data
+    elif data_file == "もうええわ":
+        import もうええわ_data as data
+    elif data_file == "ライラック":
+        import ライラック_data as data
+    elif data_file == "愛をこめて花束を":
+        import 愛をこめて花束を_data as data
+    elif data_file == "紅蓮華":
+        import 紅蓮華_data as data
+    elif data_file == "APT":
+        import APT_data as data
     else:
         raise ValueError(f"Unknown data file: {data_file}")
 
