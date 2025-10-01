@@ -77,17 +77,17 @@
         (move-backward '(-0.3 0 0))
         (rotate-right '(0 0 2))
         (rotate-left '(0 0 -2))
-        (move-right '(0 0.3 0))
-        (move-left '(0 -0.3 0))
+        (move-right '(0 0.2 0))
+        (move-left '(0 -0.2 0))
        )
     (case (mod counter 7)
       (0 stand-still)
-      (1 rotate-right)
+      (1 move-right)
       (2 stand-still)
-      (3 rotate-left)
+      (3 move-left)
       (4 stand-still)
-      (5 rotate-left)
-      (6 stand-still)
+      (5 rotate-left)2
+      (6 rotate-right)
       )))
 
 ;beat-wheel-move-dictionaryをalternating-poseをもとに作成

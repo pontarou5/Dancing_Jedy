@@ -18,7 +18,7 @@ bg_label.place(x=0, y=0, relwidth=1, relheight=1)
 style = ttk.Style()
 style.configure("TCombobox", font=("Helvetica", 24))  # フォントサイズを24に設定
 # プルダウンメニューの選択肢をリストにする
-options = ["カメレオン", "ダンスホール", "愛をこめて花束を", "firework", "permission_to_dance", "もうええわ", "ライラック", "紅蓮華","APT."]
+options = ["カメレオン", "ダンスホール", "愛をこめて花束を", "firework", "permission_to_dance", "もうええわ", "ライラック", "紅蓮華","APT"]
 combo = ttk.Combobox(root, values=options, state="readonly")
 combo.set("ダンスホール")  # デフォルト値
 combo.pack(pady=20)

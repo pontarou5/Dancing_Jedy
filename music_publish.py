@@ -8,32 +8,58 @@ import threading
 import sys
 
 # コマンドライン引数でファイルを選択
+import importlib
+
 if len(sys.argv) > 1:
     data_file = sys.argv[1]  # 引数で指定されたファイル名
 
-    if data_file == "ダンスホール":
-        import ダンスホール_data as data
-    elif data_file == "カメレオン":
-        import カメレオン_data as data
-    elif data_file == "firework":
-        import firework_data as data
-    elif data_file == "permission_to_dance":
-        import permission_to_dance_data as data
-    elif data_file == "もうええわ":
-        import もうええわ_data as data
-    elif data_file == "ライラック":
-        import ライラック_data as data
-    elif data_file == "愛をこめて花束を":
-        import 愛をこめて花束を_data as data
-    elif data_file == "紅蓮華":
-        import 紅蓮華_data as data
-    elif data_file == "APT":
-        import APT_data as data
+    data_module_map = {
+        "ダンスホール": "data_ダンスホール",
+        "カメレオン": "data_カメレオン",
+        "firework": "data_firework",
+        "permission_to_dance": "data_permission_to_dance",
+        "もうええわ": "data_もうええわ",
+        "ライラック": "data_ライラック",
+        "愛をこめて花束を": "data_愛をこめて花束を",
+        "紅蓮華": "data_紅蓮華",
+        "APT": "data_APT",
+        "Faded": "data_Faded",
+        "Make_Me_Move": "data_Make_Me_Move"
+    }
+
+    if data_file in data_module_map:
+        data = importlib.import_module(data_module_map[data_file])
     else:
         raise ValueError(f"Unknown data file: {data_file}")
 
     file_path = data.file_path
 
+# # コマンドライン引数でファイルを選択
+# if len(sys.argv) > 1:
+#     data_file = sys.argv[1]  # 引数で指定されたファイル名
+
+#     if data_file == "ダンスホール":
+#         import ダンスホール_data as data
+#     elif data_file == "カメレオン":
+#         import カメレオン_data as data
+#     elif data_file == "firework":
+#         import firework_data as data
+#     elif data_file == "permission_to_dance":
+#         import permission_to_dance_data as data
+#     elif data_file == "もうええわ":
+#         import もうええわ_data as data
+#     elif data_file == "ライラック":
+#         import ライラック_data as data
+#     elif data_file == "愛をこめて花束を":
+#         import 愛をこめて花束を_data as data
+#     elif data_file == "紅蓮華":
+#         import 紅蓮華_data as data
+#     elif data_file == "APT":
+#         import APT_data as data
+#     else:
+#         raise ValueError(f"Unknown data file: {data_file}")
+
+#     file_path = data.file_path
 
 # 音楽の進行状況を発信するためのROSノード
 def audio_player(file_path):
