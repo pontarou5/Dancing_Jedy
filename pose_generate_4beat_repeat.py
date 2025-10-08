@@ -2,40 +2,22 @@ import random
 import json
 import sys
 import os
+import importlib
 
 # コマンドライン引数でファイルを選択
 if len(sys.argv) > 1:
     data_file = sys.argv[1]  # 引数で指定されたファイル名
 
-    if data_file == "ダンスホール":
-        import ダンスホール_data as data
-    elif data_file == "カメレオン":
-        import カメレオン_data as data
-    elif data_file == "firework":
-        import firework_data as data
-    elif data_file == "permission_to_dance":
-        import permission_to_dance_data as data
-    elif data_file == "もうええわ":
-        import もうええわ_data as data
-    elif data_file == "ライラック":
-        import ライラック_data as data
-    elif data_file == "愛をこめて花束を":
-        import 愛をこめて花束を_data as data
-    elif data_file == "紅蓮華":
-        import 紅蓮華_data as data
-    elif data_file == "APT":
-        import APT_data as data
-    else:
+    module_name = f"data_{data_file}"  # 拡張子 .py は不要
+    try:
+        data = importlib.import_module(module_name)
+    except ModuleNotFoundError:
         raise ValueError(f"Unknown data file: {data_file}")
 
-
     raw_beat_times = data.beat_times
-    brightness = data.brightness
     smoothness = data.smoothness
     brightness = data.brightness
-    print(raw_beat_times)
-    print(brightness)
-
+    print("Using data from:", module_name)
 
 
 
@@ -304,28 +286,198 @@ invalid_move = [[3, 14], [12, 13], [13, 12], [14, 3]]
 
 # Generate the dance poses
 beat_pose_dictionary, beat_times = generate_robot_dance_fixed_pattern(raw_beat_times, head_ud_pose_segment, head_lr_pose_segment, left_arm_pose_segment, right_arm_pose_segment, invalid_move, brightness, smoothness)
-# print(beat_pose_dictionary)
-# print(beat_times)
 
 
-# 出力先のLispファイルの名前
-lisp_file_path = "/tmp/data.l"
+# === Lisp形式でファイル出力 ===
 
-# ファイルが既に存在する場合は内容をクリア
-if os.path.exists(lisp_file_path):
-    os.remove(lisp_file_path)
-    print("clear done")
+# 出力ファイル名を "data_<曲名>.txt" に設定
+output_filename = f"jedy_dance_subscribe_{data_file}.l"
 
-# 新しい内容でファイルを書き込み
-with open(lisp_file_path, 'w') as f:
-    f.write("(defparameter *beat-times* '(")
-    f.write(" ".join(map(str, beat_times)))
+# 既に存在する場合は削除して再生成
+if os.path.exists(output_filename):
+    os.remove(output_filename)
+    print(f"旧ファイル {output_filename} を削除しました。")
+
+# ファイルに書き込み
+with open(output_filename, 'w') as f:
+    f.write("#!/usr/bin/env roseus\n")
+    # beat-pose-dictionary 出力
+    f.write("(setq beat-pose-dictionary '(\n")
+    for beat_and_pose in beat_pose_dictionary:
+        line = "  (" + " ".join(map(str, beat_and_pose)) + ")\n"
+        f.write(line)
     f.write("))\n\n")
 
-    f.write("(defparameter *beat-pose-dictionary* '(\n")
-    for beat_and_pose in beat_pose_dictionary:
-        f.write(f"  ({' '.join(map(str, beat_and_pose))})\n")        
-    f.write("))\n")
-    f.write("(defparameter *smoothness* ")
-    f.write(str(smoothness))
-    f.write(")\n\n")
+    # beat-times 出力
+    f.write("(setq beat-times '(" + " ".join(map(str, beat_times)) + "))\n\n")
+
+    # smoothness 出力
+    f.write(f"(setq smoothness {smoothness})\n\n")
+    f.write(""";; 結果を出力
+(print "Converted beat-times:")
+(print beat-times)
+(print "Converted beat-pose-dictionary:")
+(print beat-pose-dictionary)
+
+
+
+
+;; ROSパッケージをロード
+(ros::load-ros-manifest "std_msgs")
+
+;; ノードの初期化
+(ros::roseus "audio_subscriber")
+
+;; 最新のトピックデータを格納するための変数を定義
+(defparameter *current-position* 0)
+
+;; std_msgs/Float64メッセージ型を利用してトピックをサブスクライブ
+(ros::subscribe "/audio/current_position" std_msgs::float64
+  #'(lambda (msg)
+      (setf *current-position* (send msg :data))))
+
+;;実機とつなぐかどうか
+(setq *use-robot* t)
+; (setq *use-robot* nil)
+
+
+
+;;実機の初期設定
+(when *use-robot*
+  (load "package://jedy_bringup/euslisp/jedy-interface.l")
+  (jedy-init)
+
+  (send *ri* :send-stretch
+	:names '("rarm_joint0" "rarm_joint1" "rarm_joint2" "rarm_joint3"
+		 "rarm_joint4" "rarm_joint5" "rarm_joint6" "rarm_gripper_joint"
+		 "larm_joint0" "larm_joint1" "larm_joint2" "larm_joint3"
+		 "larm_joint4" "larm_joint5" "larm_joint6" "larm_gripper_joint"
+		 "head_joint0" "head_joint1" "front_right_wheel_joint"
+		 "front_left_wheel_joint" "rear_right_wheel_joint"
+		 "rear_left_wheel_joint")
+	:value '(64 64 64 64 127 127 127 127 127 127 127 127 127 127 127 127))
+
+  (send (send *ri* :read-stretch) :slots)
+
+  (send *ri* :servo-on)
+  )
+
+
+(ros::ros-info "~A" beat-pose-dictionary)
+
+
+(defun set-current-index (current-position beat-times)
+  ; (ros::ros-info "run function : set-current-index")
+  (let ((current-index 0))
+    (dolist (beat-time beat-times)
+      (unless (numberp beat-time)
+        (ros::ros-info "beat-time is ~A so it is invalid" beat-time)
+        (return-from set-current-index nil))
+      (when (> beat-time current-position)
+        ; (ros::ros-info "current-index: ~A | current-beat: ~A" current-index beat-time)
+        ; ;; 戻り値の型をログに明示
+        ; (ros::ros-info "Returning: ~A" (list current-index beat-time))
+        (return-from set-current-index (list current-index beat-time))
+      )
+      (incf current-index))
+    nil))
+
+(defun get-next-info (current-position beat-pose-dictionary current-index current-beat smoothness)
+  "Returns the information for the next beat if the current position is close to the current beat."
+  (let* ((current-beat-and-pose (nth current-index beat-pose-dictionary)) ;; 現在のビート情報
+         (tolerance 0.1)) ;; 許容誤差（例: 100ms）
+    
+    ; ; 変数の状態を出力
+    ; (format t "DEBUG: current-position=~A, current-beat=~A, current-index=~A~%"
+    ;         current-position current-beat current-index)
+    
+    ;; 近いビートがあるかどうかを確認
+    (if (or (<= (abs (- current-position current-beat)) tolerance) ;; 最初のビートも許容
+            (= current-index 0))                                 ;; 最初のビートを強制的に処理
+        (progn
+          (format t "DEBUG: Close enough or first beat - checking next beat~%")
+          ; (let ((next-index (1+ current-index))) ;; 次のインデックスを計算
+          (let ((next-index (+ 1 current-index))) ;; 次のインデックスを計算
+
+            ;; 次のインデックスが範囲内か確認
+            (if (< next-index (length beat-pose-dictionary))
+                (let* ((next-beat-and-pose (nth next-index beat-pose-dictionary)) ;; 次のビート情報
+                       (next-time (car next-beat-and-pose))                        ;; 次のビート時刻
+                       (next-pose (cdr next-beat-and-pose)))                       ;; 次のビートのポーズ
+                  ;; 結果を計算して返す
+                  (format t "DEBUG: Found next beat at index ~A: next-time=~A, next-pose=~A~%"
+                          next-index next-time next-pose)
+                  (list (* smoothness (- next-time current-position)) next-time next-pose next-index))
+                ;; 次のインデックスが範囲外の場合のログ
+                (progn
+                  ; (format t "DEBUG: Next index (~A) is out of range~%" next-index)
+                  (return-from get-next-info nil)))))
+
+      ;; 近いビートがない場合のログ
+      ; (format t "DEBUG: No beat is close enough: current-position=~A, current-beat=~A~%"
+      ;         current-position current-beat)
+      (return-from get-next-info nil))))
+
+                                         
+        
+;; 直後のビートのインデックスを保持
+(setq current-index 0)
+
+;; 実行部分、進行状況をインデックスで管理
+(ros::rate 30)
+
+(do-until-key
+
+  (ros::spin-once)  ;; コールバックを処理
+  (if *current-position*  ;;この条件が満たされた時のみ以下全体の処理を行う
+    (progn
+      ; (format t "*current-position*: ~A seconds~%" *current-position*)
+      ; (ros::ros-info "got valid current-position")    
+      (let* ((current-index-and-beat  (set-current-index *current-position* beat-times))
+            (current-index  (car current-index-and-beat))
+            (current-beat (first (cdr current-index-and-beat))))
+        ; (ros::ros-info "current-index: ~A" current-index)
+
+        ;;次のビートの情報を取得
+        (setq next-info-list (get-next-info *current-position* beat-pose-dictionary current-index current-beat smoothness))
+        (if next-info-list
+            (let ((time-diff (nth 0 next-info-list))
+                  (next-beat (nth 1 next-info-list))
+                  (pose (remove-if #'null (nth 2 next-info-list)));; なぜか含まれるnilを取り除く
+                  (next-index (nth 3 next-info-list)))  ;; 新しいインデックス
+
+              ; (ros::ros-info "*current-position*: ~A seconds" *current-position*)
+
+              ; 次のビートの情報とポーズを送信
+              (ros::ros-info "next-index: ~A | next-beat: ~A | seconds pose:~A " next-index next-beat pose)
+              (ros::ros-info "time-diff: ~A" time-diff)
+              (when *use-robot* (send *jedy* :angle-vector pose))
+
+              ;; 時刻差に応じて補間(* 1000 time-diff)、wait-interpolation
+              (when *use-robot*
+                ; (ros::ros-info "before-move: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+                (send *ri* :angle-vector (send *jedy* :angle-vector) time-diff :default-controller 0 :min-time 0.1)
+                ;; (ros::ros-info "after-move: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+                (send *ri* :wait-interpolation)
+                ;; (ros::ros-info "after-wait: ~A seconds" (- (send (ros::time-now) :to-sec) (send start-time :to-sec)))
+              )
+    
+                ; 終了待機状態
+              (ros::ros-info "Waiting for key press...")
+            )
+            (progn
+              (ros::ros-info "get *current-position* sucssesfully but not found beat within 0.05 s")
+              (ros::ros-info "*current-position* :~A seconds" *current-position*)
+            )
+        )
+      )
+    )
+    (ros::ros-info "not found *current-position*")
+  )
+  (ros::sleep)
+)
+
+;; プログラムの終了を防ぐためにループを維持
+(ros::rate 10 (do-until-key
+                 (ros::spin-once)))""")
+print(f"Saved Lisp-style data and common part to {output_filename}")
