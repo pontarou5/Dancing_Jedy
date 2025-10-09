@@ -14,7 +14,7 @@ if len(sys.argv) > 1:
     except ModuleNotFoundError:
         raise ValueError(f"Unknown data file: {data_file}")
 
-    raw_beat_times = data.beat_times
+    beat_times = data.beat_times
     smoothness = data.smoothness
     brightness = data.brightness
     print("Using data from:", module_name)
@@ -115,7 +115,7 @@ with open(output_filename, 'w') as f:
       (2 stand-still)
       (3 move-left)
       (4 stand-still)
-      (5 rotate-left)2
+      (5 rotate-left)
       (6 rotate-right)
       )))
 

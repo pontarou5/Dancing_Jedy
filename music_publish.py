@@ -9,23 +9,20 @@ import sys
 
 # コマンドライン引数でファイルを選択
 import importlib
+import glob
 
 if len(sys.argv) > 1:
     data_file = sys.argv[1]  # 引数で指定されたファイル名
 
-    data_module_map = {
-        "ダンスホール": "data_ダンスホール",
-        "カメレオン": "data_カメレオン",
-        "firework": "data_firework",
-        "permission_to_dance": "data_permission_to_dance",
-        "もうええわ": "data_もうええわ",
-        "ライラック": "data_ライラック",
-        "愛をこめて花束を": "data_愛をこめて花束を",
-        "紅蓮華": "data_紅蓮華",
-        "APT": "data_APT",
-        "Faded": "data_Faded",
-        "Make_Me_Move": "data_Make_Me_Move"
-    }
+    # 指定フォルダ内の全ての *data_*.py ファイルを自動でマッピング
+
+    data_module_map = {}
+    data_folder = os.path.dirname(os.path.abspath(__file__))
+    for path in glob.glob(os.path.join(data_folder, "data_*.py")):
+        module_name = os.path.splitext(os.path.basename(path))[0]
+        # 曲名は "data_" を除いた部分
+        song_name = module_name.replace("data_", "")
+        data_module_map[song_name] = module_name    
 
     if data_file in data_module_map:
         data = importlib.import_module(data_module_map[data_file])
