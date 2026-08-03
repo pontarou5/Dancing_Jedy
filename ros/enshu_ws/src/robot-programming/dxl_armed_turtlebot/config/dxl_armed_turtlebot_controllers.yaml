@@ -1,0 +1,66 @@
+# Joint State Controllers ---------------------------------------
+joint_state_controller:
+  type: joint_state_controller/JointStateController
+  publish_rate: 50  
+# Trajectory Controllers ---------------------------------------
+fullbody_controller:
+  #type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
+  joints:
+    - arm_joint1
+    - arm_joint2
+    - arm_joint3
+    - arm_joint4
+    - arm_joint5
+    - arm_joint6
+  constraints:
+    goal_time: 0.5                   # Override default
+    stopped_velocity_tolerance: 0.02 # Override default
+    arm_joint1:
+      #trajectory: 0.1               # Not enforced if unspecified
+      goal: 0.02                     # Not enforced if unspecified
+    arm_joint2:
+      #trajectory: 0.1               # Not enforced if unspecified
+      goal: 0.02                     # Not enforced if unspecified
+    arm_joint3:
+      #trajectory: 0.1               # Not enforced if unspecified
+      goal: 0.02                     # Not enforced if unspecified
+    arm_joint4:
+      #trajectory: 0.1               # Not enforced if unspecified
+      goal: 0.02                     # Not enforced if unspecified
+    arm_joint5:
+      #trajectory: 0.1               # Not enforced if unspecified
+      goal: 0.02                     # Not enforced if unspecified
+    arm_joint6:
+      #trajectory: 0.1               # Not enforced if unspecified
+      goal: 0.02                     # Not enforced if unspecified
+
+  gains: # Required because we're controlling an effort interface
+    arm_joint1: {p: 25.0, i: 0.0, d: 0.0}
+    arm_joint2: {p: 25.0, i: 0.0, d: 0.0}
+    arm_joint3: {p: 25.0, i: 0.0, d: 0.0}
+    arm_joint4: {p: 25.0, i: 0.0, d: 0.0}
+    arm_joint5: {p: 25.0, i: 0.0, d: 0.0}
+    arm_joint6: {p: 25.0, i: 0.0, d: 0.0}
+  state_publish_rate:  100            # Override default
+  action_monitor_rate: 100            # Override default
+  stop_trajectory_duration: 0        # Override default
+
+gripper_controller:
+  #type: effort_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
+  joints:
+    - gripper_joint
+  constraints:
+    goal_time: 0.5                   # Override default
+    stopped_velocity_tolerance: 0.02 # Override default
+    gripper_joint:
+      #trajectory: 0.05               # Not enforced if unspecified
+      goal: 0.02                     # Not enforced if unspecified
+
+  gains: # Required because we're controlling an effort interface
+    gripper_joint: {p: 10.0, i: 0.0, d: 0.0}
+  state_publish_rate:  100            # Override default
+  action_monitor_rate: 100            # Override default
+  stop_trajectory_duration: 0        # Override default
+

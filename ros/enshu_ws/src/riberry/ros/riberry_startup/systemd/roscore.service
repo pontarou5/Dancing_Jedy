@@ -1,0 +1,19 @@
+[Unit]
+Description=Run roscore
+After=NetworkManager.service
+Requires=NetworkManager.service
+
+[Service]
+EnvironmentFile=-/etc/opt/riberry/riberry.user
+Environment="ROSCONSOLE_FORMAT='[${severity}] [${time}] [${node}:${logger}]: ${message}'"
+ExecStart=/bin/bash -c '. $SETUP && export $(python3 $(rospack find riberry_startup)/scripts/get_roshost.py --rossetmaster $RIBERRY_ROS_MASTER_IP) && roscore'
+SyslogIdentifier=%n
+Restart=always
+RestartSec=10s
+Type=simple
+User=root
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
