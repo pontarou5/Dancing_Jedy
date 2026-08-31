@@ -17,12 +17,14 @@ if len(sys.argv) > 1:
     # 指定フォルダ内の全ての *data_*.py ファイルを自動でマッピング
 
     data_module_map = {}
-    data_folder = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_folder = os.path.join(base_dir, "analyzed_music_data")
     for path in glob.glob(os.path.join(data_folder, "data_*.py")):
-        module_name = os.path.splitext(os.path.basename(path))[0]
+        base_name = os.path.splitext(os.path.basename(path))[0]  # "data_ダンスホール"
         # 曲名は "data_" を除いた部分
-        song_name = module_name.replace("data_", "")
-        data_module_map[song_name] = module_name    
+        song_name = base_name.replace("data_", "", 1)
+        module_name = "analyzed_music_data." + base_name
+        data_module_map[song_name] = module_name
 
     if data_file in data_module_map:
         data = importlib.import_module(data_module_map[data_file])
@@ -75,8 +77,17 @@ def audio_player(file_path):
     # duration = player.get_length() / 1000  # 音楽の全長（秒）
     # print(f"Duration: {duration:.2f} seconds")
 
-    # ROSノードの初期化
-    rospy.init_node('audio_player', anonymous=True)
+    # ROSノードの初期化 (Gazebo sim time が準備できるまでリトライ)
+    for attempt in range(60):
+        try:
+            rospy.init_node('audio_player', anonymous=True)
+            break
+        except Exception as e:
+            print(f"Waiting for ROS master/clock... ({attempt+1}/60): {e}")
+            time.sleep(1)
+    else:
+        print("ERROR: Could not connect to ROS master after 60s. Exiting.")
+        return
     pub = rospy.Publisher('/audio/current_position', Float64, queue_size=1)
 
     # 一時停止・再開のフラグ

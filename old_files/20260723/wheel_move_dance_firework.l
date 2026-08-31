@@ -5,7 +5,7 @@
 (ros::load-ros-manifest "std_msgs")
 
 ;; ノードの初期化
-(ros::roseus "wheel_move_subscriber")
+(ros::roseus "audio_subscriber")
 
 ;; 最新のトピックデータを格納するための変数を定義
 (defparameter *current-position* 0)
@@ -77,9 +77,9 @@
     (case (mod counter 7)
       (0 stand-still)
       (1 move-right)
-      (2 stand-still)
+      (2 move-foward)
       (3 move-left)
-      (4 stand-still)
+      (4 move-backward)
       (5 rotate-left)
       (6 rotate-right)
       )))

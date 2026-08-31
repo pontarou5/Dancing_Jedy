@@ -26,14 +26,12 @@
 
 ;;実機の初期設定
 (when *use-robot*
-  (load "package://jedy_bringup/euslisp/jedy-interface.l")
+  (load "package://jedy_bringup/euslisp/jedy-interface-modified.l")
   (jedy-init)
 
   (send *ri* :send-stretch
 	:names '("rarm_joint0" "rarm_joint1" "rarm_joint2" "rarm_joint3"
-		 "rarm_joint4" "rarm_joint5" "rarm_joint6" "rarm_gripper_joint"
 		 "larm_joint0" "larm_joint1" "larm_joint2" "larm_joint3"
-		 "larm_joint4" "larm_joint5" "larm_joint6" "larm_gripper_joint"
 		 "head_joint0" "head_joint1" "front_right_wheel_joint"
 		 "front_left_wheel_joint" "rear_right_wheel_joint"
 		 "rear_left_wheel_joint")

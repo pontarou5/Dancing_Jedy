@@ -301,7 +301,7 @@
 (ros::load-ros-manifest "std_msgs")
 
 ;; ノードの初期化
-(ros::roseus "jedy_dance_subscriber")
+(ros::roseus "audio_subscriber")
 
 ;; 最新のトピックデータを格納するための変数を定義
 (defparameter *current-position* 0)

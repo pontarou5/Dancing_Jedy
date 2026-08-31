@@ -1,0 +1,7 @@
+# spleeterのモデルキャッシュ・音源分離の中間出力（数百MB、再生成可能なため追跡しない）
+/pretrained_models/
+/separated_audio/
+
+# Pythonバイトコードキャッシュ
+__pycache__/
+*.pyc
