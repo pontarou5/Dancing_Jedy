@@ -38,7 +38,8 @@ sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main
 curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
 sudo apt update
 sudo apt install -y ros-noetic-desktop-full python3-rosdep python3-catkin-tools
-sudo rosdep init && rosdep update
+sudo rosdep init
+rosdep update --include-eol-distros   # Noetic は EOL 扱いなのでこのフラグが必須
 echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
 source /opt/ros/noetic/setup.bash
 ```
@@ -54,7 +55,9 @@ sudo apt install -y python3-tk python3-pip ffmpeg vlc libvlc-dev git gnome-termi
 ### 3. リポジトリの取得と`ros`ワークスペースの展開
 
 このリポジトリは、ダンス制御一式（`Dancing_Jedy`本体）に加えて、必要なROSワークスペースの
-ソース一式（`build`/`devel`/`logs`を除く）を`ros/`フォルダに同梱しています。
+ソース一式（`build`/`devel`/`logs`を除く）を`ros/`フォルダに同梱しています。**同梱の`ros/`は
+jedy用にカスタマイズ済みで、これが唯一の正となるバージョンです**（上流リポジトリからの再取得や
+更新は不要かつ非推奨。詳細は手順4）。
 
 ```bash
 cd ~
@@ -71,13 +74,56 @@ find ~/Dancing_Jedy/analyzed_music_data -name "data_*.py" \
 
 ### 4. ROSワークスペースのビルド
 
+**同梱の `ros/enshu_ws/src` をそのまま使ってビルドします。** `src` は jedy 用にカスタマイズ
+済みで、`vcsinstall.noetic.yaml` を使った `vcs import` / `vcs pull` による再取得・更新は
+**行わないでください**（カスタマイズが上書きされます）。`vcstool` も不要です。
+
+ワークスペースは `catkin_tools`（`catkin build`）でビルドします。`jedy_bringup` を指定すると
+その依存パッケージだけがビルドされるため、同梱ワークスペース全体（60超のパッケージ）を
+ビルドする必要はありません。
+
 ```bash
+source /opt/ros/noetic/setup.bash
 cd ~/ros/enshu_ws
-rosdep install --from-paths src --ignore-src -r -y
-catkin_make
+
+# 【重要】rosdistro が Noetic を EOL 扱いにしたため、--include-eol-distros が必須。
+# これを付けないと "Skip end-of-life distro noetic" となり、pr2eus / jskeus などの
+# 依存キー（apt パッケージ）が一切解決できません。
+rosdep update --include-eol-distros
+rosdep install --from-paths src --ignore-src -y -r --rosdistro noetic
+
+catkin build jedy_bringup
 echo "source ~/ros/enshu_ws/devel/setup.bash" >> ~/.bashrc
 source ~/ros/enshu_ws/devel/setup.bash
 rospack find jedy_bringup   # 見つかればOK
+```
+
+> `rosdep install` は `src` 内の全パッケージの依存を調べるため、`jedy_bringup` に関係しない
+> パッケージ（`turtlebot_follower` など）で「rosdep 定義が見つからない」旨のエラーが出ることが
+> あります。`-r`（エラーが出ても続行）を付けているので無視して問題ありません。`catkin build
+> jedy_bringup` は `jedy_bringup` の依存ツリーだけをビルドするため影響しません。
+
+#### `kxr_controller` / `kxreus` の venv ビルドが `pycollada` で失敗する場合
+
+`catkin_virtualenv` が `pip-compile` する際、以下のエラーで止まることがあります。
+
+```
+Could not find a version that matches pycollada<=0.9,==0.7.1,>=0.8
+There are incompatible versions in the resolved dependencies:
+  pycollada==0.7.1  ...
+  pycollada<=0.9,>=0.8 (from scikit-robot==0.3.19->...)
+```
+
+`src/rcb4/ros/kxr_controller/requirements.in` と `src/rcb4/ros/kxreus/requirements.in` が
+`pycollada==0.7.1` を固定していますが、現在の PyPI では `scikit-robot`（`no_mesh_load_mode`
+等を使うため必須）のどのバージョンも `pycollada>=0.8` を要求し、両立しません。両ファイルを
+次のように変更してください（同梱 src では対応済み）。
+
+```diff
+- scikit-robot>=0.0.45
++ scikit-robot==0.3.19
+- pycollada==0.7.1
++ pycollada==0.8
 ```
 
 ### 5. Pythonライブラリのインストール
@@ -123,12 +169,100 @@ python3 gui_dancing_jedy_sim.py   # シミュレーション(Gazebo)版
 # python3 gui_dancing_jedy_real.py  # 実機版
 ```
 
+GUI で曲を選ぶと、別ターミナルで Gazebo と roseus のダンス制御、および `music_publish.py`
+（音楽再生）が起動します。distrobox で動かす場合は、上記の `.bashrc` 追記と
+`gnome-terminal` ラッパーを入れた状態で `distrobox enter jedy` した対話シェルから起動して
+ください（GPU 無しのホストでは Gazebo が software rendering になり動作が重くなります）。
+
 ## Ubuntu 20.04以外の環境で動かす方法
 
 ROS Noeticは公式にはUbuntu 20.04 (Focal) 専用です。それ以外のOS・ディストリビューションで
-動かす場合は、以下のいずれかの方法を取ってください。
+動かす場合は、以下のいずれかの方法を取ってください。実際に **Ubuntu 24.04 のホスト上で
+distrobox（方法A）を使って通しでセットアップした際の注意点** を各所に追記しています。
 
-### 方法A: Docker（推奨）
+### 方法A: distrobox（Ubuntu 20.04 コンテナ / 最も手軽・推奨）
+
+`distrobox` は `podman`/`docker` の上に「ホームディレクトリ・X11・音声をホストと共有した」
+コンテナを作るツールです。手動での `docker run` オプション（X11ソケット・`DISPLAY`・`--net`）
+指定が不要で、GazeboのGUIやVLC再生もそのまま動きます。ホスト（Ubuntu 22.04/24.04 等）に
+`podman` と `distrobox` を入れておきます。
+
+```bash
+# ホスト側
+sudo apt install -y podman distrobox
+
+# Ubuntu 20.04 + ROS Noetic のコンテナを作成（ROS入りイメージなので「手順1」は不要）
+# --home でコンテナ専用ホームを与え、ホストの ~/.local や dotfile と混ざらないようにする
+mkdir -p ~/.distrobox-homes/jedy
+distrobox create --name jedy \
+  --image docker.io/osrf/ros:noetic-desktop-full \
+  --home ~/.distrobox-homes/jedy
+
+distrobox enter jedy
+```
+
+以降はコンテナ内で「環境構築」の **手順2〜6をそのまま** 実行します。ただし distrobox 特有の
+ハマりどころがいくつかあるので、まずコンテナ専用の `~/.bashrc`（`~/.distrobox-homes/jedy/.bashrc`。
+ホスト側 `~/.bashrc` とは別ファイル）の末尾に次をまとめて追記します。
+
+```bash
+# --- Dancing_Jedy / distrobox setup ---
+if [ -n "$CONTAINER_ID" ]; then
+    # (a) ホスト pyenv の PATH 混入を除去（← コンテナ python3 が /usr/bin/python3 になる）
+    export PATH="$(printf '%s' "$PATH" | tr ':' '\n' | grep -v '/\.pyenv/' | grep -v '/\.pyenv$' | paste -sd ':' -)"
+    unset PYENV_ROOT PYENV_SHELL PYENV_VERSION
+    hash -r
+    # (b) catkin_tools はフルパスの SHELL を要求する
+    export SHELL=/bin/bash
+    # (c) ROS 環境を自動 source（GUI から起動する子プロセスにも引き継がれる）
+    [ -f /opt/ros/noetic/setup.bash ] && source /opt/ros/noetic/setup.bash
+    [ -f "$HOME/ros/enshu_ws/devel/setup.bash" ] && source "$HOME/ros/enshu_ws/devel/setup.bash"
+    # (d) python-xlib / pynput をホストの X サーバーに接続させる
+    if [ -n "$DISPLAY" ] && command -v xhost >/dev/null 2>&1; then
+        xhost +SI:localuser:"$(id -un)" >/dev/null 2>&1
+    fi
+fi
+```
+
+さらに **(e) `gnome-terminal` ラッパー** をコンテナ内に置きます（下記）。追記・設置が済んだら
+`exit` → `distrobox enter jedy` で入り直し、`python3 --version` が `Python 3.8.x`
+（＝`/usr/bin/python3`）になっていることを確認してから手順2へ進みます。
+
+- **(a) pyenv 混入**：これが無いと `python3` がホストの Python（新しい glibc 向けビルド）を指し、
+  `GLIBC_2.34 not found` で `pip` が全滅します。distrobox がホストのログインシェル環境
+  （`PYENV_ROOT`・`PATH` の pyenv shim）をそのまま引き継ぐのが原因です。
+- **(b) `SHELL`**：フルパスでない `SHELL`（`bash` 等）を継承すると `catkin build` が
+  `Cannot determine shell executable` で落ちます。
+- **(c) ROS の source**：GUI（`python3 gui_dancing_jedy_sim.py`）から起動される roslaunch /
+  roseus の子プロセスは、GUI プロセスの環境を継承します。対話シェルで ROS が source されて
+  いれば子にも渡ります。
+- **(d) `pynput` の X 接続**：`music_publish.py` が使う `pynput`（python-xlib 経由）は、
+  コンテナのホスト名がホストと異なるため MIT-MAGIC-COOKIE が一致せず
+  `failed to acquire X connection … Authorization required` になります（tkinter/libX11 は
+  通るのに pynput だけ落ちる）。`xhost +SI:localuser:$(id -un)` で uid ベースのアクセスを
+  許可すれば解決します。
+- **(e) `gnome-terminal`**：GUI は `gnome-terminal -- bash -c "roslaunch …"` で別端末を開きますが、
+  `gnome-terminal` はホスト常駐の `gnome-terminal-server` に処理を委譲するため、**新しい端末が
+  コンテナではなくホストで開き** `roslaunch: command not found` になります。コンテナ内に
+  `--disable-factory` を強制するラッパーを置いて回避します。
+
+  ```bash
+  sudo tee /usr/local/bin/gnome-terminal >/dev/null <<'EOF'
+  #!/bin/sh
+  exec /usr/bin/gnome-terminal --disable-factory "$@"
+  EOF
+  sudo chmod +x /usr/local/bin/gnome-terminal
+  ```
+
+> **GUI の停止ボタンに注意**：`gui_dancing_jedy_sim.py` の停止処理は `pkill -9 -f ros` を実行し、
+> コマンドラインに `ros` を含むプロセスを巻き込んで殺すため、distrobox/podman 側のプロセスが
+> 落ちて `unable to find user … in passwd file` になることがあります。その場合は
+> `distrobox stop jedy` してから `distrobox enter jedy` で入り直せば復旧します。
+
+コンテナは `distrobox enter jedy` でいつでも再入室できます。不要になったら
+`distrobox rm jedy` （＋ `rm -rf ~/.distrobox-homes/jedy`）で削除できます。
+
+### 方法B: Docker
 
 ホストOSに関係なく、コンテナ内はUbuntu 20.04として動くため最も確実です。Gazebo・GUIを
 表示するにはホストのXサーバーへ接続する設定が必要です。
@@ -151,13 +285,13 @@ CUDA対応のPyTorchイメージを使ってください（このプロジェク
 macOSの場合はDocker Desktop + [XQuartz](https://www.xquartz.org/)、WindowsはWSL2 + Docker
 Desktop（WSLgでX11転送が自動対応）で同様の手順が使えます。
 
-### 方法B: 仮想マシン
+### 方法C: 仮想マシン
 
 VirtualBox/VMware等でUbuntu 20.04のVMを作成し、その中で「環境構築」の手順をそのまま実行する
 方法です。Dockerより準備は簡単ですが、Gazeboの3D描画がVM内だと重くなりがちな点に注意してくだ
 さい（VirtualBoxなら3Dアクセラレーションを有効化、VMwareならGPU passthroughを検討）。
 
-### 方法C: RoboStack (conda/mamba)
+### 方法D: RoboStack (conda/mamba)
 
 Ubuntu 20.04以外のOS上に、conda環境としてROS Noeticそのものをインストールする方法です
 （Linux/macOS/Windows対応、Dockerより軽量）。
