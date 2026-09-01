@@ -13,6 +13,30 @@ DANCE_DATA_PATH = "/tmp/data.l"
 GAZEBO_STARTUP_DELAY_MS = 10000
 
 
+# 「新しい曲のダンスを生成」でmp3を選ぶファイルダイアログの初期ディレクトリ候補。
+# Docker/distroboxではホストのダウンロードフォルダがそのままでは見えないため、
+# コンテナ内にマウントしたホスト側ディレクトリ(/host/*)を最優先で探す。
+# 見つからなければ通常のホーム配下 → 最後はスクリプトのフォルダ。
+_MUSIC_DIALOG_DIRS = (
+    "/host/Music", "/host/Downloads", "/host",
+    os.path.expanduser("~/Music"), os.path.expanduser("~/Downloads"),
+    os.path.expanduser("~/ダウンロード"), os.path.expanduser("~/ミュージック"),
+    os.path.expanduser("~"),
+)
+
+
+def _default_music_dir():
+    existing = [d for d in _MUSIC_DIALOG_DIRS if d and os.path.isdir(d)]
+    # まずmp3が実際に入っているディレクトリを優先（空のMusicフォルダ等を避ける）
+    for d in existing:
+        try:
+            if any(f.lower().endswith(".mp3") for f in os.listdir(d)):
+                return d
+        except OSError:
+            pass
+    return existing[0] if existing else SCRIPT_DIR
+
+
 def _existing_song_names():
     """original_musicsフォルダに既にあるmp3から曲名(拡張子抜き)の集合を作る"""
     if not os.path.isdir(MUSIC_DIR):
@@ -86,6 +110,7 @@ def generate_new_dance():
     # ローカルのmp3ファイルを１つ選択してもらい、それをoriginal_musicsフォルダにコピーして、original_musicsフォルダの方のパスをnew_musicとして保持
     selected_path = filedialog.askopenfilename(
         title="mp3ファイルを選択してください",
+        initialdir=_default_music_dir(),
         filetypes=[("MP3 files", "*.mp3")],
     )
     if not selected_path:

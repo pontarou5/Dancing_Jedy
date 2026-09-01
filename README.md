@@ -8,21 +8,9 @@
 アルゴリズムの概略：
 
 1. 楽曲ファイルを読み込む
-2. 【音楽解析】楽曲の歌詞によるネガポジ判定、ビートの時刻位置推定、曲調（滑らかさ）の定量化を行う
+2. 【音楽解析】ビートの時刻位置推定、楽曲の歌詞によるネガポジ/曲調（滑らかさ）の定量化を行う
 3. 【振付生成】2に基づいて、楽曲に合ったダンスの振り付けを生成
-4. 【リアルタイム制御】楽曲の再生状況に応じた（再生/一時停止、10秒送り戻しにも対応した）関節角度指令をロボットに送る
-
-
-音楽解析用に作成したコードはこちらから参照可能
-
-//spleeterを使用した音源分離
-https://colab.research.google.com/drive/18nodO3Cg6QCma0GafrH48j50DRP3K6DE?usp=sharing
-
-//librosaを使用したビート抽出
-https://colab.research.google.com/drive/1a0ExqukH8umQLp9yCtuQm-l81wBqQWzz?usp=sharing
-
-//brightness/smoothness解析
-https://colab.research.google.com/drive/1CEpwTy5hbMkic0YiylBLwTE7dLgv3BoI?usp=sharing
+4. 【リアルタイム制御】楽曲の再生状況に応じた関節角度指令をロボットに送る（キーボード入力で、2: 再生/一時停止、1: 10秒戻し、3: 10秒送りの操作が可能）
 
 ## 環境構築
 
@@ -180,7 +168,7 @@ ROS Noeticは公式にはUbuntu 20.04 (Focal) 専用です。それ以外のOS�
 動かす場合は、以下のいずれかの方法を取ってください。実際に **Ubuntu 24.04 のホスト上で
 distrobox（方法A）を使って通しでセットアップした際の注意点** を各所に追記しています。
 
-### 方法A: distrobox（Ubuntu 20.04 コンテナ / 最も手軽・推奨）
+### 方法A: distrobox（Ubuntu 20.04 コンテナ / 推奨）
 
 `distrobox` は `podman`/`docker` の上に「ホームディレクトリ・X11・音声をホストと共有した」
 コンテナを作るツールです。手動での `docker run` オプション（X11ソケット・`DISPLAY`・`--net`）
@@ -264,45 +252,126 @@ fi
 
 ### 方法B: Docker
 
-ホストOSに関係なく、コンテナ内はUbuntu 20.04として動くため最も確実です。Gazebo・GUIを
-表示するにはホストのXサーバーへ接続する設定が必要です。
+**Ubuntu 24.04 ホスト（X11 は Xwayland、音声は PipeWire）で新曲追加まで含めて通しで動作確認済み。**
+distrobox（方法A）と違い、ホストの D-Bus セッションバスもログインシェル環境も継承しないため、
+pyenv 混入も `gnome-terminal` のホスト委譲も起きず、回避策が少なくて済みます。以下は
+`osrf/ros:noetic-desktop-full`（Ubuntu 20.04 + ROS Noetic 同梱）を root ユーザーで使う手順です。
+「環境構築」の手順1（ROS 導入）は不要、手順2〜6 を Docker 向けに調整して実行します。
+
+#### B-1. コンテナ起動（ホスト側）
 
 ```bash
-# ホスト側（Ubuntu 22.04/24.04など）
-xhost +local:docker
+xhost +local:                 # ローカルX接続を許可（pynput/tkinter/Gazebo すべてこれで通る）
 
-docker run -it --net=host \
-  -e DISPLAY=$DISPLAY \
+docker run -d --name jedy_b --net=host \
+  -e DISPLAY="$DISPLAY" \
+  -e PULSE_SERVER="unix:$XDG_RUNTIME_DIR/pulse/native" \
+  -e PULSE_COOKIE=/root/.config/pulse/cookie \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
-  -v ~/Dancing_Jedy:/root/Dancing_Jedy \
-  osrf/ros:noetic-desktop-full bash
+  -v "$XDG_RUNTIME_DIR/pulse/native:$XDG_RUNTIME_DIR/pulse/native" \
+  -v "$HOME/.config/pulse/cookie:/root/.config/pulse/cookie:ro" \
+  -v "$HOME/Downloads:/host/Downloads" \
+  -v "$HOME/Music:/host/Music:ro" \
+  osrf/ros:noetic-desktop-full sleep infinity
+
+docker exec -it jedy_b bash    # 以降この中で作業
 ```
 
-コンテナ内で上記「環境構築」の手順2以降（ROS自体は既にイメージに含まれるので手順1は不要）を
-そのまま実行してください。GPUで音声認識/機械学習を高速化したい場合は`--gpus all`を追加し、
-CUDA対応のPyTorchイメージを使ってください（このプロジェクトはCPU版PyTorchで動作確認済み）。
+マウントの意味：
 
-macOSの場合はDocker Desktop + [XQuartz](https://www.xquartz.org/)、WindowsはWSL2 + Docker
-Desktop（WSLgでX11転送が自動対応）で同様の手順が使えます。
+| マウント / 環境変数 | 目的 |
+|---|---|
+| `DISPLAY` ＋ `/tmp/.X11-unix` | GUI・Gazebo・rviz の表示 |
+| `PULSE_SERVER` ＋ `pulse/native` ＋ `pulse/cookie` | `music_publish.py` の音楽再生。**無いと Gazebo は映るが曲が鳴らない** |
+| `$HOME/Downloads:/host/Downloads` | 「新しい曲のダンスを生成」で選ぶ mp3 をコンテナから見えるようにする |
 
-### 方法C: 仮想マシン
+#### B-2. システムパッケージ（手順2 相当・コンテナ内）
 
-VirtualBox/VMware等でUbuntu 20.04のVMを作成し、その中で「環境構築」の手順をそのまま実行する
-方法です。Dockerより準備は簡単ですが、Gazeboの3D描画がVM内だと重くなりがちな点に注意してくだ
-さい（VirtualBoxなら3Dアクセラレーションを有効化、VMwareならGPU passthroughを検討）。
-
-### 方法D: RoboStack (conda/mamba)
-
-Ubuntu 20.04以外のOS上に、conda環境としてROS Noeticそのものをインストールする方法です
-（Linux/macOS/Windows対応、Dockerより軽量）。
+`osrf/ros` イメージには `catkin build`（catkin_tools）が入っていないので `python3-catkin-tools`
+を追加します。素のイメージに `gnome-terminal` を普通に入れると Recommends 連鎖で GNOME
+デスクトップ一式（約570パッケージ / 160MB）が来るので `--no-install-recommends` を付けます
+（`xterm` でも可）。
 
 ```bash
-conda create -n ros_env python=3.8
-conda activate ros_env
-conda install -c conda-forge -c robostack-staging ros-noetic-desktop
+apt-get update
+apt-get install -y --no-install-recommends \
+  python3-tk python3-pip python3-catkin-tools ffmpeg vlc libvlc-dev git \
+  gnome-terminal dconf-gsettings-backend gsettings-desktop-schemas \
+  pulseaudio-utils libpulse0 \
+  ros-noetic-ros-control ros-noetic-ros-controllers ros-noetic-gazebo-ros-control \
+  ros-noetic-ridgeback-control
 ```
 
-その後、`rosdep`/`catkin build`等のコマンド名がRoboStack環境では若干異なる場合があるので、
-[RoboStack公式ドキュメント](https://robostack.github.io/)を参照しつつ、上記「環境構築」の
-手順3以降（`apt`によるROS本体インストール部分を除く）を進めてください。ただし本プロジェクトは
-Ubuntu 20.04 + ROS Noeticでのみ動作確認をしており、RoboStack環境での動作は未検証です。
+> `--no-install-recommends` 抜きの通し確認はできていますが（GNOME 一式込みで約570パッケージ）、
+> `--no-install-recommends` 版で `gnome-terminal` が `Failed to create terminal` 等で起動
+> しない場合は、`--no-install-recommends` を外すか `dbus-x11` を追加してください。
+
+#### B-3. リポジトリ取得・ワークスペース展開・`requirements.in` 修正（手順3 相当）
+
+```bash
+cd /root
+git clone https://github.com/pontarou5/Dancing_Jedy.git Dancing_Jedy-clone
+mkdir -p /root/ros
+mv /root/Dancing_Jedy-clone/ros/enshu_ws /root/ros/enshu_ws
+rm -rf /root/Dancing_Jedy-clone/ros
+mv /root/Dancing_Jedy-clone /root/Dancing_Jedy
+find /root/Dancing_Jedy/analyzed_music_data -name "data_*.py" \
+  -exec sed -i "s#/home/m-aoki/Dancing_Jedy#$HOME/Dancing_Jedy#g" {} +
+
+# kxr_controller / kxreus の requirements.in の pycollada 固定を修正（手順4の小節と同じ理由）
+for f in /root/ros/enshu_ws/src/rcb4/ros/kxr_controller/requirements.in \
+         /root/ros/enshu_ws/src/rcb4/ros/kxreus/requirements.in; do
+  sed -i 's/^scikit-robot.*/scikit-robot==0.3.19/; s/^pycollada==0.7.1$/pycollada==0.8/' "$f"
+done
+```
+
+#### B-4. ビルド（手順4 相当）
+
+```bash
+source /opt/ros/noetic/setup.bash
+rosdep update --include-eol-distros         # root だと警告が出るが動く
+cd /root/ros/enshu_ws
+rosdep install --from-paths src --ignore-src -y -r --rosdistro noetic || true
+catkin build jedy_bringup
+source /root/ros/enshu_ws/devel/setup.bash
+rospack find jedy_bringup
+```
+
+#### B-5. Python ライブラリ（手順5 相当）
+
+「環境構築」の手順5 のコマンドをそのまま実行します。root 実行なので `--user` は `/root/.local`
+に入ります（`pandas`/`launchpadlib` 等の互換警告は無害、import は通ります）。
+
+#### B-6. 起動（手順6 相当）
+
+毎回の環境設定を `/root/.bashrc` に入れておくと `docker exec -it jedy_b bash` するだけで済みます。
+
+```bash
+cat >> /root/.bashrc <<'EOF'
+source /opt/ros/noetic/setup.bash
+[ -f /root/ros/enshu_ws/devel/setup.bash ] && source /root/ros/enshu_ws/devel/setup.bash
+export PATH=$HOME/.local/bin:$PATH
+EOF
+
+cd /root/Dancing_Jedy && python3 gui_dancing_jedy_sim.py
+```
+
+#### Docker 固有の補足
+
+- **`gnome-terminal` はラッパー不要**：コンテナ内に `gnome-terminal-server` が居ないので標準の
+  `gnome-terminal` がそのままコンテナ内でシェルを起動します（方法A の `--disable-factory`
+  ラッパー不要）。`Couldn't connect to accessibility bus` 等の警告は無害。
+- **音声確認**：`pactl info`（`Server Name: PulseAudio (on PipeWire ...)` と `Default Sink`
+  が出れば接続 OK）。任意の wav を `paplay <file>.wav` で鳴らして確認。
+- **新曲のファイル選択**：GUI のダイアログは `_default_music_dir()`（`gui_dancing_jedy_*.py`）で
+  `/host/Music` → `/host/Downloads` → `~/Downloads` → `~/Music` → `~` の順に見て、
+  **mp3 が実際に入っている最初のディレクトリ** を初期表示します。ホストの mp3 置き場を
+  `-v ...:/host/Downloads` でマウントしておけばそのまま選べます。
+- **GPU**：音声認識 / 学習を速くしたい場合は `--gpus all` ＋ CUDA 版 PyTorch イメージ
+  （本プロジェクトは CPU 版 PyTorch で確認済み）。
+- **コンテナ管理**：再入室 `docker exec -it jedy_b bash`、停止/再開 `docker stop|start jedy_b`
+  （writable レイヤは保持）、破棄 `docker rm -f jedy_b`。ビルド済み状態を残すなら
+  `docker commit jedy_b jedy_b:built` でイメージ化できます。
+
+macOS は Docker Desktop + [XQuartz](https://www.xquartz.org/)、Windows は WSL2 + Docker
+Desktop（WSLg が X11 を自動対応）で同様の手順が使えます（音声経路は各環境で別途設定）。
