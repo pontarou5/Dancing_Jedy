@@ -104,6 +104,43 @@ def on_select(event):
 
 combo.bind("<<ComboboxSelected>>", on_select)
 
+
+def ask_lyrics_language():
+    """歌詞の言語(日本語/英語)を選ばせるモーダル画面を表示し 'ja'/'en' を返す。
+    ウィンドウが閉じられただけの場合は None を返す。ここで選ばれた言語が
+    music_analysis.py の歌詞抽出(音声認識・感情分析)に使われる。"""
+    dialog = tk.Toplevel(root)
+    dialog.title("歌詞の言語を選択")
+    dialog.geometry("560x320")
+    dialog.transient(root)
+    dialog.grab_set()
+
+    result = {"lang": None}
+
+    tk.Label(
+        dialog,
+        text="この曲の歌詞の言語を選んでください\n（歌詞抽出に使用します）",
+        font=("Helvetica", 16),
+        justify="center",
+    ).pack(pady=30)
+
+    def choose(lang):
+        result["lang"] = lang
+        dialog.destroy()
+
+    btn_frame = tk.Frame(dialog)
+    btn_frame.pack(pady=20)
+    tk.Button(btn_frame, text="日本語", font=("Helvetica", 20),
+              command=lambda: choose("ja"), **button_style).pack(
+        side=tk.LEFT, padx=20, ipadx=25, ipady=18)
+    tk.Button(btn_frame, text="English", font=("Helvetica", 20),
+              command=lambda: choose("en"), **button_style).pack(
+        side=tk.LEFT, padx=20, ipadx=25, ipady=18)
+
+    root.wait_window(dialog)
+    return result["lang"]
+
+
 # 各ボタンが呼び出す関数
 def generate_new_dance():
     print("新しいダンススクリプトを生成")
@@ -131,6 +168,13 @@ def generate_new_dance():
             print(f"「{song_name}」は既存の曲と同名のため中止しました")
             return
 
+    # 歌詞抽出に使う言語をユーザーに選ばせる（日本語 or 英語）
+    lang = ask_lyrics_language()
+    if lang is None:
+        print("歌詞の言語が選択されなかったため中止しました")
+        return
+    print(f"歌詞の言語: {lang}")
+
     os.makedirs(MUSIC_DIR, exist_ok=True)
     dest_path = os.path.join(MUSIC_DIR, os.path.basename(selected_path))
     shutil.copy(selected_path, dest_path)
@@ -144,7 +188,7 @@ def generate_new_dance():
     if os.path.exists(marker_path):
         os.remove(marker_path)
     subprocess.Popen(["gnome-terminal", "--", "bash", "-c",
-        f'python3 music_analysis.py -f "{new_music}" && '
+        f'python3 music_analysis.py -f "{new_music}" --lang {lang} && '
         f'python3 dance_generation.py -f "{new_music}" && '
         f'touch "{marker_path}"; exec bash'])
     _wait_for_new_dance(song_name, marker_path)

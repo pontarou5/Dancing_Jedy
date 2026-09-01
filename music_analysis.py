@@ -98,7 +98,7 @@ def detect_beat_positions(drums_wav_file, tempo_multiplier=2, audio_start_time=0
 # =============================
 # brightness（歌詞の感情分析）
 # =============================
-def transcribe_lyrics(vocals_wav_file, lang="ja", start_sec=30, end_sec=90):
+def transcribe_lyrics(vocals_wav_file, lang="ja", start_sec=20, end_sec=80):
     import speech_recognition as sr
     from pydub import AudioSegment
 
@@ -239,8 +239,16 @@ def main():
     )
     print(f"    {len(beat_times)} 拍検出（曲の開始時刻: {audio_start:.3f}秒）")
 
-    print(">>> 歌詞の明るさ(brightness)分析 ...")
-    lyrics = transcribe_lyrics(os.path.join(stems_dir, "vocals.wav"), lang=args.lang)
+    lang_label = "日本語" if args.lang == "ja" else "英語"
+    print(f">>> 歌詞の明るさ(brightness)分析 ... (歌詞の言語: {lang_label})")
+    vocals_wav = os.path.join(stems_dir, "vocals.wav")
+    # まず開始20秒後〜80秒後で歌詞抽出。認識できなければ80秒後〜110秒後で再実行する。
+    lyrics = transcribe_lyrics(vocals_wav, lang=args.lang, start_sec=20, end_sec=80)
+    if not lyrics.strip():
+        print("    20〜80秒で認識できなかったため、80〜110秒で再実行します ...")
+        lyrics = transcribe_lyrics(vocals_wav, lang=args.lang, start_sec=80, end_sec=110)
+    if lyrics.strip():
+        print(f"    抽出された歌詞: {lyrics}")
     brightness = analyze_brightness(lyrics, lang=args.lang)
     print(f"    brightness = {brightness:.4f}")
 
