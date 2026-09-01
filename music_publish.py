@@ -31,7 +31,11 @@ if len(sys.argv) > 1:
     else:
         raise ValueError(f"Unknown data file: {data_file}")
 
+    # data_<曲名>.py の file_path はリポジトリ直下からの相対パス。
+    # 実行時のカレントディレクトリに依存しないよう、このスクリプトの場所を基準に解決する。
     file_path = data.file_path
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(base_dir, file_path)
 
 # # コマンドライン引数でファイルを選択
 # if len(sys.argv) > 1:

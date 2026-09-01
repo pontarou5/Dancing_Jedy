@@ -257,7 +257,11 @@ def main():
     print(f"    smoothness = {smoothness:.4f}")
 
     os.makedirs(DATA_DIR, exist_ok=True)
-    write_analysis_result(data_path, mp3_path, beat_times, brightness, smoothness)
+    # data_<曲名>.py に個人情報になり得る絶対パスを残さないよう、file_path は
+    # リポジトリ直下(SCRIPT_DIR)からの相対パスで保存する（音源がリポジトリ外にある場合のみ絶対パス）。
+    rel_path = os.path.relpath(mp3_path, SCRIPT_DIR)
+    stored_path = mp3_path if rel_path.startswith(os.pardir + os.sep) else rel_path
+    write_analysis_result(data_path, stored_path, beat_times, brightness, smoothness)
     print(f"{data_path} に書き込みました。")
 
 

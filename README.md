@@ -54,11 +54,11 @@ mkdir -p ~/ros
 mv ~/Dancing_Jedy-clone/ros/enshu_ws ~/ros/enshu_ws
 rm -rf ~/Dancing_Jedy-clone/ros
 mv ~/Dancing_Jedy-clone ~/Dancing_Jedy
-
-# mp3の絶対パス参照をこの環境に合わせて書き換え
-find ~/Dancing_Jedy/analyzed_music_data -name "data_*.py" \
-  -exec sed -i "s#/home/m-aoki/Dancing_Jedy#$HOME/Dancing_Jedy#g" {} +
 ```
+
+`analyzed_music_data/data_*.py` の `file_path` はリポジトリ直下からの相対パス
+（例: `original_musics/ダンスホール.mp3`）で保存されており、`music_publish.py` が
+スクリプトの場所を基準に解決するため、環境ごとのパス書き換えは不要です。
 
 ### 4. ROSワークスペースのビルド
 
@@ -317,8 +317,6 @@ mkdir -p /root/ros
 mv /root/Dancing_Jedy-clone/ros/enshu_ws /root/ros/enshu_ws
 rm -rf /root/Dancing_Jedy-clone/ros
 mv /root/Dancing_Jedy-clone /root/Dancing_Jedy
-find /root/Dancing_Jedy/analyzed_music_data -name "data_*.py" \
-  -exec sed -i "s#/home/m-aoki/Dancing_Jedy#$HOME/Dancing_Jedy#g" {} +
 
 # kxr_controller / kxreus の requirements.in の pycollada 固定を修正（手順4の小節と同じ理由）
 for f in /root/ros/enshu_ws/src/rcb4/ros/kxr_controller/requirements.in \
