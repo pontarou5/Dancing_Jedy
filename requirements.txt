@@ -1,0 +1,40 @@
+# Dancing_Jedy: music_analysis.py -> dance_generation.py -> シミュレーション上でのダンス実行
+# までに必要なPythonライブラリ一覧。
+#
+# 前提: python3-tk / ffmpeg / vlc など、pipでは入らないOSパッケージが別途必要。
+# インストール手順・各パッケージの用途は README.md の「環境構築」の節を参照。
+#
+# 注意: `pip3 install -r requirements.txt` を一括実行すると、pipの依存解決が
+# tensorflow(spleeter経由)とtorch/pyOpenSSL/librosaのtyping-extensions要求で
+# 衝突し ResolutionImpossible になることがある(実際に確認済み)。
+# 確実にインストールしたい場合は README.md の「環境構築」に書いた
+# 段階的インストール手順（1グループずつ pip install する）を使うこと。
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- music_analysis.py: 音源分離・ビート検出 ---
+numpy==1.24.3
+scipy==1.10.1
+librosa==0.11.0
+pydub==0.25.1
+spleeter==2.4.2
+
+# --- music_analysis.py: 歌詞の書き起こし・明るさ(brightness)分析 ---
+SpeechRecognition==3.10.4
+transformers==4.46.3
+torch==2.4.1+cpu
+torchvision==0.19.1+cpu
+torchaudio==2.4.1+cpu
+
+# --- spleeter(TensorFlow)がシステムの古いh5py/pyOpenSSLと衝突するための明示的な上書き ---
+# (numpy.typeDict / X509_V_FLAG_NOTIFY_POLICY 関連のエラーを避けるため)
+h5py==3.11.0
+pyOpenSSL==26.2.0
+
+# --- music_publish.py: 音楽再生・進行状況の配信 ---
+python-vlc==3.0.7110
+pynput==1.8.1
+
+# --- dance_generation.py, gui_dancing_jedy_sim.py / gui_dancing_jedy_real.py ---
+# 標準ライブラリ(argparse, importlib, os, random, re, sys, tkinter, subprocess等)のみで
+# 動作するため、追加のpip依存はなし。
