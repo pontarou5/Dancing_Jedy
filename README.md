@@ -45,11 +45,10 @@ sudo apt install -y python3-tk python3-pip ffmpeg vlc libvlc-dev git gnome-termi
 
 ```bash
 cd ~
-git clone https://github.com/pontarou5/Dancing_Jedy.git Dancing_Jedy-clone
+git clone https://github.com/pontarou5/Dancing_Jedy.git
+# catkin ワークスペースは repo の外に置く（catkin build が repo を汚さないよう mv ではなく cp）
 mkdir -p ~/ros
-mv ~/Dancing_Jedy-clone/ros/enshu_ws ~/ros/enshu_ws
-rm -rf ~/Dancing_Jedy-clone/ros
-mv ~/Dancing_Jedy-clone ~/Dancing_Jedy
+cp -r ~/Dancing_Jedy/ros/enshu_ws ~/ros/enshu_ws
 ```
 
 `analyzed_music_data/data_*.py` の `file_path` は相対パス保存なので、環境ごとの書き換えは不要です。
