@@ -5,7 +5,7 @@
       "Bash(grep -l \"4\\\\.505\\\\|4\\\\.5050\" /home/m-aoki/Dancing_Jedy/*.l 2>/dev/null | head -5)",
       "Read(//home/m-aoki/Dancing_Jedy/**)",
       "Bash(grep -n \"4\\\\.505\" /home/m-aoki/Dancing_Jedy/*.l 2>/dev/null | head -10)",
-      "Bash(grep -n \"firework\\\\|subscribe\\\\|roseus\\\\|subprocess\\\\|current_position\" /home/m-aoki/Dancing_Jedy/gui_dancing_jedy_17_musics_sim.py | head -30)",
+      "Bash(grep -n \"firework\\\\|subscribe\\\\|roseus\\\\|subprocess\\\\|current_position\" /home/m-aoki/Dancing_Jedy/gui_dancing_jedy_sim.py | head -30)",
       "Bash(cat /home/m-aoki/Dancing_Jedy/music_publish.py)",
       "Bash(head -15 /home/m-aoki/Dancing_Jedy/wheel_move_dance_firework.l)",
       "Bash(grep -n \"smoothness\\\\|beat-times\\\\|current_position\\\\|angle-vector\\\\|audio\" /home/m-aoki/Dancing_Jedy/wheel_move_dance_firework.l | head -20)",
