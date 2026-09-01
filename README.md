@@ -157,4 +157,5 @@ docker exec -it jedy_b bash
 
 以降はコンテナ内で「環境構築」の手順 2〜6 を実行します（ROS 導入の手順 1 は不要、`python3-catkin-tools` の追加が必要）。ホスト環境を継承しないため pyenv 混入や `gnome-terminal` ラッパーの対応は不要です。GUI のファイルダイアログはマウント先（`/host/Downloads` 等）を自動で初期表示します。
 
-macOS は Docker Desktop + XQuartz、Windows は WSL2 + Docker Desktop（WSLg）で同様の手順が使えます。
+macOS は Docker Desktop + XQuartz､
+Windows は WSL2 + Docker Desktop（WSLg）で同様の手順が使えます。
