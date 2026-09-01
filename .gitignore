@@ -5,3 +5,7 @@
 # Pythonバイトコードキャッシュ
 __pycache__/
 *.pyc
+
+# Claude Code のローカル設定（各自の環境依存・共有不要）
+.claude/
+CLAUDE.local.md
